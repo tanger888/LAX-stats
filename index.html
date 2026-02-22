@@ -996,6 +996,7 @@ function parseClockTime(str){
 }
 // ── Word-to-number map for spoken jersey numbers ──
 const WORD_NUMS={
+  // Standard spoken forms
   'zero':'0','one':'1','two':'2','three':'3','four':'4','five':'5',
   'six':'6','seven':'7','eight':'8','nine':'9','ten':'10',
   'eleven':'11','twelve':'12','thirteen':'13','fourteen':'14','fifteen':'15',
@@ -1005,7 +1006,27 @@ const WORD_NUMS={
   'twenty nine':'29','thirty':'30','thirty three':'33','thirty five':'35',
   'thirty nine':'39','forty':'40','forty two':'42','forty nine':'49',
   'sixty nine':'69','eighty eight':'88','ninety two':'92','ninety eight':'98',
-  'ninety nine':'99'
+  'ninety nine':'99',
+  // Safari speech-to-text homophones (what it actually transcribes)
+  'won':'1',           // "one" → "won"
+  'to':'2','too':'2',  // "two" → "to" or "too"
+  'tree':'3','free':'3','three':'3', // "three" → "tree" or "free"
+  'for':'4','fore':'4',// "four" → "for" or "fore"
+  'ate':'8',           // "eight" → "ate"
+  'niner':'9',         // military/aviation "nine" → "niner"
+  'won the':'11',      // edge case
+  // Two-word homophones
+  'won the won':'11',
+  'twenty won':'21','twenty to':'22','twenty too':'22',
+  'twenty free':'23','twenty tree':'23',
+  'twenty for':'24','twenty fore':'24',
+  'twenty five':'25',
+  'thirty free':'33','thirty tree':'33',
+  'forty to':'42','forty too':'42',
+  'forty niner':'49',
+  'eighty ate':'88',
+  'ninety to':'92','ninety too':'92',
+  'ninety niner':'99'
 };
 
 // Convert any spoken word-numbers in text to digits, return converted text
@@ -1176,7 +1197,7 @@ function processVoice(rawText){
   const resultEl=document.getElementById('voice-result');
   // Step 1: convert spoken word-numbers to digits ("one" → "1", "twenty two" → "22")
   const converted=wordsToNums(rawText.toLowerCase().trim());
-  resultEl.innerHTML=`<div style="color:var(--gray)">Heard: "${rawText}"${converted!==rawText.toLowerCase().trim()?'<br><span style="color:#4a6a50;font-size:.75rem">Interpreted: "'+converted+'"</span>':''}</div>`;
+  resultEl.innerHTML=`<div style="color:var(--gray)">Heard: "<em>${rawText}</em>"</div><div style="color:#4a7a55;font-size:.75rem;margin-top:2px">Parsed as: "<em>${converted}</em>"</div>`;
 
   // Step 2: extract clock time ("at 8:30" or "time 8 30" anywhere in text)
   const{time:voiceTime,rest:text}=extractTimeFromText(converted);
