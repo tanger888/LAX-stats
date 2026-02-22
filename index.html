@@ -164,6 +164,20 @@
   .player-suggest .ps-num{font-family:'Bebas Neue',sans-serif;color:var(--gold);min-width:28px;}
   .player-suggest .ps-name{color:var(--white);}
 
+  /* ── END GAME EDITABLE CELLS ── */
+  .eg-editable{cursor:text;border-bottom:1px dashed #3a5030;min-width:20px;}
+  .eg-editable:focus{outline:none;background:#1a2a1a;border-bottom:1px solid var(--gold);}
+
+  /* ── COMMAND REFERENCE ── */
+  .cmd-group { margin-bottom: 16px; }
+  .cmd-group-title { font-family: 'Bebas Neue', sans-serif; font-size: .95rem; color: var(--gold-light); letter-spacing: 1px; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid #2e3828; }
+  .cmd-rule { font-size: .76rem; color: var(--gray); line-height: 1.55; margin-bottom: 4px; }
+  .cmd-kw { color: var(--gold); font-weight: 600; }
+  .cmd-example-box { background: #0e130e; border: 1px solid #2a3424; border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 5px; }
+  .cmd-ex { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: .78rem; }
+  .cmd-say { color: var(--white); font-family: monospace; font-size: .8rem; flex-shrink: 0; }
+  .cmd-desc { color: var(--gray); font-size: .72rem; text-align: right; }
+
   @media print {
     body{background:white!important;color:black!important;}
     #game-screen{display:block!important;}
@@ -196,7 +210,7 @@
     <h3>Game Setup</h3>
     <div>
       <label>Your Team Name</label>
-      <input type="text" id="setup-team" placeholder="e.g. Eagles" value="Eagles">
+      <input type="text" id="setup-team" placeholder="e.g. Eagles" value="Mira Costa Mustangs">
     </div>
     <div>
       <label>Opponent Name</label>
@@ -204,7 +218,13 @@
     </div>
     <div class="row">
       <div><label>Date</label><input type="text" id="setup-date" placeholder="MM/DD/YYYY"></div>
-      <div><label>Location</label><input type="text" id="setup-loc" placeholder="Home / Away"></div>
+      <div><label>Location</label>
+        <select class="stat-select" id="setup-loc" style="margin:0;padding:10px 12px">
+          <option value="Home">Home</option>
+          <option value="Away">Away</option>
+          <option value="Neutral">Neutral</option>
+        </select>
+      </div>
     </div>
     <div>
       <label>Level</label>
@@ -238,7 +258,8 @@
     <h3>📖 Voice Commands</h3>
     <div class="help-text">
       Say: <strong>"[#] [stat]"</strong> &nbsp;·&nbsp; Optionally prefix with time: <strong>"[time] [#] [stat]"</strong><br><br>
-      <strong>With time:</strong> "8 30 22 goal" → #22 goal @ 8:30<br><br>
+      <strong>With time:</strong> "[#] [stat] time [mm:ss]"<br>
+      "22 goal time 8 30" → #22 goal @ 8:30<br><br>
       <strong>Goals:</strong> "22 goal" · "22 shot" · "22 shot on goal"<br>
       <strong>Defense:</strong> "14 ground ball" · "1 save" · "9 caused turnover"<br>
       <strong>Face-offs:</strong> "3 face off win" · "3 face off loss"<br>
@@ -277,7 +298,7 @@
 <div id="game-screen">
   <div class="game-header">
     <div class="teams">
-      <div class="team-name" id="hdr-team">Eagles</div>
+      <div class="team-name" id="hdr-team">Mira Costa Mustangs</div>
       <div class="vs">vs <span id="hdr-opp">Warriors</span></div>
     </div>
     <div class="game-meta">
@@ -289,11 +310,17 @@
       <button class="quarter-btn" onclick="nextPeriod()">▶</button>
     </div>
     <div class="scoreboard">
-      <button class="score-btn" onclick="changeScore('home',1)">+</button>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <button class="score-btn" onclick="changeScore('home',1)">+</button>
+        <button class="score-btn" onclick="changeScore('home',-1)">−</button>
+      </div>
       <div class="score-num" id="score-home">0</div>
       <div class="score-dash">-</div>
       <div class="score-num" id="score-opp">0</div>
-      <button class="score-btn" onclick="changeScore('opp',1)">+</button>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <button class="score-btn" onclick="changeScore('opp',1)">+</button>
+        <button class="score-btn" onclick="changeScore('opp',-1)">−</button>
+      </div>
     </div>
   </div>
 
@@ -335,6 +362,12 @@
     <div class="log-section">
       <h4>Event Log <span id="log-count" class="badge">0</span></h4>
       <div class="log-feed" id="log-feed"></div>
+    </div>
+
+    <div style="padding:0 14px 14px">
+      <button class="btn danger" onclick="openEndGame()" style="font-size:1.1rem;letter-spacing:2px">
+        🏁 END GAME
+      </button>
     </div>
   </div>
 
@@ -378,11 +411,124 @@
   <div id="tab-info" class="tab-panel">
     <div class="section-title">Game Info</div>
     <div id="game-info-display" style="font-size:.85rem;color:var(--gray);line-height:2.1"></div>
-    <div style="margin-top:18px;display:flex;flex-direction:column;gap:10px" class="no-print">
+    <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px" class="no-print">
       <button class="btn secondary" onclick="exportCSV()">📥 Export CSV</button>
       <button class="btn danger" onclick="confirmReset()">🗑 Reset Stats (Keep Roster)</button>
       <button class="btn secondary" onclick="showSetup()">⚙ Edit Game Info</button>
     </div>
+
+    <hr class="divider">
+
+    <!-- VOICE COMMAND REFERENCE -->
+    <div class="section-title">🎙 Voice Command Reference</div>
+
+    <div class="cmd-group">
+      <div class="cmd-group-title">Basic Syntax</div>
+      <div class="cmd-rule">
+        Say the jersey number, then the stat. Optionally add the clock time at the end by saying the word <span class="cmd-kw">time</span> followed by the time.
+      </div>
+      <div class="cmd-example-box">
+        <div class="cmd-ex"><span class="cmd-kw">[#] [stat]</span><span class="cmd-desc">Basic entry</span></div>
+        <div class="cmd-ex"><span class="cmd-kw">[#] [stat] time [mm:ss]</span><span class="cmd-desc">With clock time</span></div>
+      </div>
+    </div>
+
+    <div class="cmd-group">
+      <div class="cmd-group-title">⏱ Recording Clock Time</div>
+      <div class="cmd-rule">After saying the stat, say <span class="cmd-kw">time</span> then the clock time. You can say it as minutes and seconds, or just minutes.</div>
+      <div class="cmd-example-box">
+        <div class="cmd-ex"><span class="cmd-say">"22 goal time 8 30"</span><span class="cmd-desc">#22 goal @ 8:30</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"7 assist time 12"</span><span class="cmd-desc">#7 assist @ 12:00</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"3 slash time 6:45"</span><span class="cmd-desc">#3 penalty @ 6:45</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"1 save time 4 20"</span><span class="cmd-desc">#1 save @ 4:20</span></div>
+      </div>
+      <div class="cmd-rule" style="margin-top:6px">You can also type the time in the <span class="cmd-kw">Clock time</span> field before speaking — it will be applied to the next stat logged.</div>
+    </div>
+
+    <div class="cmd-group">
+      <div class="cmd-group-title">🥍 Goals &amp; Shooting</div>
+      <div class="cmd-example-box">
+        <div class="cmd-ex"><span class="cmd-say">"[#] goal"</span><span class="cmd-desc">Goal (auto +1 score)</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"[#] assist"</span><span class="cmd-desc">Assist (links to last goal)</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"[#] shot"</span><span class="cmd-desc">Shot attempt</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"[#] shot on goal"</span><span class="cmd-desc">Shot on goal</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"[#] shot off goal"</span><span class="cmd-desc">Shot off goal / wide</span></div>
+      </div>
+    </div>
+
+    <div class="cmd-group">
+      <div class="cmd-group-title">🧤 Goalie</div>
+      <div class="cmd-example-box">
+        <div class="cmd-ex"><span class="cmd-say">"[#] save"</span><span class="cmd-desc">Save</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"[#] goal allowed"</span><span class="cmd-desc">Goal allowed</span></div>
+      </div>
+    </div>
+
+    <div class="cmd-group">
+      <div class="cmd-group-title">⬇️ Ground Balls &amp; Clears</div>
+      <div class="cmd-example-box">
+        <div class="cmd-ex"><span class="cmd-say">"[#] ground ball"</span><span class="cmd-desc">Ground ball</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"[#] clear"</span><span class="cmd-desc">Successful clear</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"[#] failed clear"</span><span class="cmd-desc">Failed clear</span></div>
+      </div>
+    </div>
+
+    <div class="cmd-group">
+      <div class="cmd-group-title">🔄 Turnovers</div>
+      <div class="cmd-example-box">
+        <div class="cmd-ex"><span class="cmd-say">"[#] turnover"</span><span class="cmd-desc">Turnover</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"[#] caused turnover"</span><span class="cmd-desc">Caused turnover</span></div>
+      </div>
+    </div>
+
+    <div class="cmd-group">
+      <div class="cmd-group-title">🏁 Face-Offs</div>
+      <div class="cmd-example-box">
+        <div class="cmd-ex"><span class="cmd-say">"[#] face off win"</span><span class="cmd-desc">Face-off win</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"[#] face off loss"</span><span class="cmd-desc">Face-off loss</span></div>
+      </div>
+    </div>
+
+    <div class="cmd-group">
+      <div class="cmd-group-title">🟨 Penalties</div>
+      <div class="cmd-rule">Say the jersey number then the penalty keyword. Add <span class="cmd-kw">time [mm:ss]</span> at the end to timestamp it. Duration defaults to 1 min — use the Penalty quick button to set a different duration.</div>
+      <div class="cmd-example-box">
+        <div class="cmd-ex"><span class="cmd-say">"[#] slash"</span><span class="cmd-desc">Slashing</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"[#] cross check"</span><span class="cmd-desc">Cross checking</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"[#] push"</span><span class="cmd-desc">Pushing</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"[#] hold"</span><span class="cmd-desc">Holding</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"[#] illegal body check"</span><span class="cmd-desc">Illegal body check</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"[#] unsportsmanlike"</span><span class="cmd-desc">Unsportsmanlike conduct</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"[#] crease"</span><span class="cmd-desc">Crease violation</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"[#] conduct"</span><span class="cmd-desc">Conduct foul</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"[#] warding"</span><span class="cmd-desc">Warding off</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"[#] offsides"</span><span class="cmd-desc">Offsides</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"[#] roughness"</span><span class="cmd-desc">Unnecessary roughness</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"[#] interference"</span><span class="cmd-desc">Interference</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"[#] late hit"</span><span class="cmd-desc">Late hit</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"[#] expulsion"</span><span class="cmd-desc">Expulsion</span></div>
+      </div>
+    </div>
+
+    <div class="cmd-group">
+      <div class="cmd-group-title">⏱ Timeouts &amp; Period</div>
+      <div class="cmd-example-box">
+        <div class="cmd-ex"><span class="cmd-say">"timeout"</span><span class="cmd-desc">Your team timeout</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"opponent timeout"</span><span class="cmd-desc">Opponent timeout</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"next quarter"</span><span class="cmd-desc">Advance to next quarter</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"next half"</span><span class="cmd-desc">Advance to next half</span></div>
+      </div>
+    </div>
+
+    <div class="cmd-group">
+      <div class="cmd-group-title">💡 Tips</div>
+      <div class="cmd-rule">• Single-digit jersey numbers: just say the number — "7 goal" works, no need to say "zero seven"</div>
+      <div class="cmd-rule">• Assists auto-link to the most recent unassisted goal</div>
+      <div class="cmd-rule">• Tap <span class="cmd-kw">✕</span> on any event log entry to undo it — the stat is removed from totals</div>
+      <div class="cmd-rule">• The score auto-increments when you log a goal. Use +/− buttons in the header to correct it</div>
+      <div class="cmd-rule">• Use the quick buttons when it's too loud for voice — they also accept the clock time field</div>
+    </div>
+
   </div>
 
   <div class="bottom-nav">
@@ -390,6 +536,122 @@
     <button class="nav-tab" onclick="showTab('stats',this)"><span class="nav-icon">📊</span>STATS</button>
     <button class="nav-tab" onclick="showTab('pen',this)"><span class="nav-icon">🟨</span>FOULS</button>
     <button class="nav-tab" onclick="showTab('info',this)"><span class="nav-icon">ℹ️</span>INFO</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     END GAME SCREEN
+══════════════════════════════════════════════════════ -->
+<div id="endgame-screen" style="display:none;flex-direction:column;min-height:100vh;">
+
+  <!-- Header -->
+  <div class="game-header" style="flex-direction:column;gap:6px;padding:14px 16px">
+    <div style="display:flex;align-items:center;width:100%;gap:10px">
+      <button class="btn secondary sm" onclick="closeEndGame()" style="width:auto;padding:8px 14px;flex-shrink:0">← Back</button>
+      <div style="flex:1;text-align:center">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--gold);letter-spacing:2px" id="eg-title">Game Summary</div>
+        <div style="font-size:.75rem;color:var(--gray)" id="eg-subtitle"></div>
+      </div>
+      <div style="width:70px"></div>
+    </div>
+    <!-- Final score display -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:14px;background:#0e130e;border:1px solid #2e3828;border-radius:10px;padding:10px 20px;width:100%">
+      <div style="text-align:center">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;color:var(--gray)" id="eg-team-label">EAGLES</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:2.6rem;color:var(--gold);line-height:1" id="eg-score-home">0</div>
+      </div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--gray)">FINAL</div>
+      <div style="text-align:center">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:.8rem;color:var(--gray)" id="eg-opp-label">OPP</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:2.6rem;color:var(--white);line-height:1" id="eg-score-opp">0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit notice -->
+  <div style="background:#1a2010;border-bottom:1px solid #2e3828;padding:10px 16px;font-size:.78rem;color:var(--gold-light);display:flex;align-items:center;gap:8px">
+    <span>✏️</span>
+    <span>Review and edit below before saving. Tap any stat cell to correct it. Tap ✕ on any event to remove it.</span>
+  </div>
+
+  <!-- Scrollable review content -->
+  <div id="endgame-body" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:16px">
+
+    <!-- Player Stats -->
+    <div>
+      <div class="section-title">Player Stats</div>
+      <div class="stat-table-wrap">
+        <table class="main-stat" id="eg-stat-table">
+          <thead><tr>
+            <th>#</th><th>Name</th><th>G</th><th>A</th><th>Pts</th>
+            <th>S</th><th>SOG</th><th>GB</th><th>TO</th><th>CTO</th>
+            <th>FO-W</th><th>FO-L</th><th>Sv</th><th>GA</th><th>Pen</th>
+          </tr></thead>
+          <tbody id="eg-stat-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Goal Log -->
+    <div>
+      <div class="section-title">Goal Log <span id="eg-goal-count" class="badge green">0</span></div>
+      <div class="stat-table-wrap">
+        <table class="goal-log">
+          <thead><tr><th>Per.</th><th>Time</th><th>#</th><th>Scorer</th><th>Assist</th><th>Score</th></tr></thead>
+          <tbody id="eg-goal-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Penalty Log -->
+    <div>
+      <div class="section-title">Penalties <span id="eg-pen-count" class="badge red">0</span></div>
+      <div class="pen-list" id="eg-pen-list"></div>
+    </div>
+
+    <!-- Event Log -->
+    <div>
+      <div class="section-title">Full Event Log</div>
+      <div class="log-feed" id="eg-log-feed" style="max-height:300px"></div>
+    </div>
+
+  </div>
+
+  <!-- Save / Export footer -->
+  <div style="background:var(--panel);border-top:2px solid var(--gold);padding:14px 16px;display:flex;flex-direction:column;gap:10px" id="endgame-footer">
+
+    <div style="font-family:'Bebas Neue',sans-serif;color:var(--gold);font-size:1rem;letter-spacing:1px">💾 Save &amp; Export</div>
+
+    <!-- Save locally (download JSON snapshot) -->
+    <button class="btn secondary" onclick="saveGameLocally()" style="font-size:.95rem;padding:11px">
+      📱 Save to Device (JSON)
+    </button>
+
+    <!-- Cloud storage -->
+    <div style="display:flex;gap:8px">
+      <button class="btn secondary" onclick="saveToGoogleDrive()" style="flex:1;font-size:.85rem;padding:10px">
+        ☁️ Google Drive
+      </button>
+      <button class="btn secondary" onclick="saveToiCloud()" style="flex:1;font-size:.85rem;padding:10px">
+        ☁️ iCloud / Files
+      </button>
+    </div>
+
+    <!-- Export & Email -->
+    <div style="font-family:'Bebas Neue',sans-serif;color:var(--gold-light);font-size:.85rem;letter-spacing:1px;margin-top:2px">📧 Email Export</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn blue" onclick="emailCSV()" style="flex:1;font-size:.85rem;padding:10px">
+        📊 Email CSV
+      </button>
+      <button class="btn blue" onclick="emailHTML()" style="flex:1;font-size:.85rem;padding:10px">
+        📄 Email PDF-ready
+      </button>
+    </div>
+
+    <div style="font-size:.7rem;color:var(--gray);text-align:center;line-height:1.5">
+      CSV opens in Excel / Google Sheets. PDF-ready opens a print-formatted page — use your browser's Print → Save as PDF to create the PDF before attaching.
+    </div>
+
   </div>
 </div>
 
@@ -520,7 +782,7 @@ let roster = DEFAULT_ROSTER.map(p=>({...p}));
 // GAME STATE
 // ═══════════════════════════════════════════════════
 let game = {
-  team:'Eagles', opp:'Opponent', date:'', loc:'', level:'Varsity',
+  team:'Mira Costa Mustangs', opp:'Opponent', date:'', loc:'', level:'Varsity',
   format:'quarters', periodMins:12, totalPeriods:4, period:1,
   scoreHome:0, scoreOpp:0,
   players:{}, events:[], penalties:[], goals:[],
@@ -558,13 +820,14 @@ function getPlayer(num){
 // SCREEN NAVIGATION
 // ═══════════════════════════════════════════════════
 function show(screenId){
-  ['setup-screen','roster-screen','game-screen'].forEach(id=>{
+  ['setup-screen','roster-screen','game-screen','endgame-screen'].forEach(id=>{
     const el=document.getElementById(id);
     el.style.display = id===screenId ? (id==='game-screen'?'flex':'flex') : 'none';
   });
   if(screenId==='setup-screen') document.getElementById('setup-screen').style.display='flex';
   if(screenId==='roster-screen') document.getElementById('roster-screen').style.display='flex';
   if(screenId==='game-screen') document.getElementById('game-screen').style.display='flex';
+  if(screenId==='endgame-screen') document.getElementById('endgame-screen').style.display='flex';
 }
 function showSetup(){show('setup-screen');}
 function showRoster(){returnToGame=false;renderRosterTable();show('roster-screen');}
@@ -689,12 +952,22 @@ function parseClockTime(str){
   return m+':'+String(s).padStart(2,'0');
 }
 function extractTimeFromText(text){
-  const colonPat=text.match(/^(?:at\s+)?(\d{1,2}:\d{2})\s+/);
-  if(colonPat)return{time:parseClockTime(colonPat[1]),rest:text.slice(colonPat[0].length)};
-  const spacePat=text.match(/^(\d{1,2})\s+(\d{2})\s+(?=\d)/);
-  if(spacePat)return{time:parseClockTime(spacePat[1]+':'+spacePat[2]),rest:text.slice(spacePat[0].length)};
-  const minPat=text.match(/^(\d{1,2})\s+min\w*\s+/i);
-  if(minPat)return{time:parseClockTime(minPat[1]),rest:text.slice(minPat[0].length)};
+  // New syntax: "[# stat] time [clock]"
+  // e.g. "22 goal time 8 30" or "7 slash time 12:00"
+  // Look for the word "time" followed by digits anywhere in the utterance
+  const timeSuffix=text.match(/\btime\s+(\d{1,2}[:\s]\d{2}|\d{1,2})\s*$/i);
+  if(timeSuffix){
+    const t=parseClockTime(timeSuffix[1]);
+    const rest=text.slice(0,timeSuffix.index).trim();
+    return{time:t,rest};
+  }
+  // Also handle "time 8:30" with colon anywhere in utterance
+  const timeColon=text.match(/\btime\s+(\d{1,2}:\d{2})/i);
+  if(timeColon){
+    const t=parseClockTime(timeColon[1]);
+    const rest=text.replace(timeColon[0],'').trim();
+    return{time:t,rest};
+  }
   return{time:null,rest:text};
 }
 function getActiveTime(){return parseClockTime(document.getElementById('manual-time').value);}
@@ -836,7 +1109,14 @@ function processVoice(rawText){
   }
   const numMatch=text.match(/\b(\d{1,2})\b/);
   if(!numMatch){resultEl.innerHTML+='<div class="parsed" style="color:var(--accent)">⚠ No jersey number found</div>';return;}
-  const num=numMatch[1];
+  // Resolve spoken number to roster jersey — handles "7" matching #7 or #07
+  let num=numMatch[1];
+  if(!roster.find(r=>r.num===num)){
+    const padded=num.padStart(2,'0');
+    const unpadded=num.replace(/^0+/,'');
+    if(roster.find(r=>r.num===padded))num=padded;
+    else if(roster.find(r=>r.num===unpadded))num=unpadded;
+  }
   const penKey=Object.keys(PENALTY_TYPES).sort((a,b)=>b.length-a.length).find(k=>text.includes(k));
   if(penKey){
     logPenaltyDirect(num,PENALTY_TYPES[penKey],'1:00',clockTime);
@@ -1048,38 +1328,10 @@ function updateGameInfo(){
 // EXPORT CSV
 // ═══════════════════════════════════════════════════
 function exportCSV(){
-  const hdr=['#','Last','First','Goals','Assists','Points','Shots','SOG','GroundBalls','Turnovers','CausedTO','FO-Wins','FO-Losses','Saves','GoalsAllowed','Penalties'];
-  const allNums=new Set([...roster.map(r=>r.num),...Object.keys(game.players)]);
-  const pRows=[...allNums].sort((a,b)=>parseInt(a)-parseInt(b)).map(n=>{
-    const p=getPlayer(n);
-    const rp=roster.find(r=>r.num===n)||{};
-    return[n,rp.last||'',rp.first||'',p.goals||0,p.assists||0,(p.goals||0)+(p.assists||0),
-      p.shots||0,p.shotsOnGoal||0,p.groundBalls||0,p.turnovers||0,p.causedTurnovers||0,
-      p.faceOffWins||0,p.faceOffLosses||0,p.saves||0,p.goalsAllowed||0,p.penalties||0];
-  });
-  const gHdr=['Period','Time','Scorer#','ScorerFirst','ScorerLast','Assist#','AssistFirst','AssistLast','Score'];
-  const gRows=game.goals.map(g=>{
-    const sr=roster.find(r=>r.num===String(g.scorer))||{};
-    const ar=g.assistBy?roster.find(r=>r.num===String(g.assistBy))||{}:{};
-    return[periodLabel(g.period),g.clockTime||'',g.scorer,sr.first||'',sr.last||'',g.assistBy||'',ar.first||'',ar.last||'',`${g.homeScore}-${g.oppScore}`];
-  });
-  const penHdr=['Period','Time','Jersey#','First','Last','PenaltyType','Duration'];
-  const penRows=game.penalties.map(p=>{
-    const rp=roster.find(r=>r.num===String(p.jersey))||{};
-    return[periodLabel(p.period),p.clockTime||'',p.jersey,rp.first||'',rp.last||'',p.pen,p.dur];
-  });
-  const csv=[
-    `${game.team} vs ${game.opp}`,
-    `Date: ${game.date||''}   Location: ${game.loc||''}   Level: ${game.level}`,
-    `Format: ${game.format==='halves'?'2 Halves':'4 Quarters'} (${game.periodMins} min each)`,
-    `Final: ${game.team} ${game.scoreHome} - ${game.scoreOpp} ${game.opp}`,
-    '','PLAYER STATS',hdr.join(','),...pRows.map(r=>r.join(',')),
-    '','GOAL LOG',gHdr.join(','),...gRows.map(r=>r.join(',')),
-    '','PENALTY LOG',penHdr.join(','),...penRows.map(r=>r.join(','))
-  ].join('\n');
+  const csv = buildCSV();
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download=`${game.team}_vs_${game.opp}_${game.date||'stats'}.csv`;
+  a.download=game.team+'_vs_'+game.opp+'_'+(game.date||'stats')+'.csv';
   a.click();
 }
 
@@ -1106,6 +1358,325 @@ if('wakeLock'in navigator){
   const rl=async()=>{try{await navigator.wakeLock.request('screen');}catch(e){}};
   rl();document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')rl();});
 }
+// ═══════════════════════════════════════════════════
+// END GAME
+// ═══════════════════════════════════════════════════
+function openEndGame(){
+  if(!confirm('End the game and go to the summary screen?')) return;
+  renderEndGameSummary();
+  show('endgame-screen');
+}
+
+function closeEndGame(){
+  show('game-screen');
+}
+
+function renderEndGameSummary(){
+  // Header info
+  const filename = game.team+'_vs_'+game.opp+'_'+(game.date||'stats');
+  document.getElementById('eg-title').textContent = game.team+' vs '+game.opp;
+  document.getElementById('eg-subtitle').textContent = (game.date||'') + (game.loc?' · '+game.loc:'') + ' · '+game.level;
+  document.getElementById('eg-team-label').textContent = game.team.toUpperCase();
+  document.getElementById('eg-opp-label').textContent = game.opp.toUpperCase();
+  document.getElementById('eg-score-home').textContent = game.scoreHome;
+  document.getElementById('eg-score-opp').textContent = game.scoreOpp;
+
+  // Player stats table (editable cells)
+  const allNums = new Set([...roster.map(r=>r.num),...Object.keys(game.players)]);
+  const players = [...allNums].map(n=>getPlayer(n)).sort((a,b)=>parseInt(a.num)-parseInt(b.num));
+  const statCols = ['goals','assists','shots','shotsOnGoal','groundBalls','turnovers','causedTurnovers','faceOffWins','faceOffLosses','saves','goalsAllowed','penalties'];
+  document.getElementById('eg-stat-tbody').innerHTML = players.map(p=>{
+    const rp = roster.find(r=>r.num===p.num);
+    const pts = (p.goals||0)+(p.assists||0);
+    return `<tr>
+      <td class="num-col">${p.num}</td>
+      <td style="text-align:left">${rp?rp.last:p.name||''}</td>
+      <td class="eg-editable" contenteditable="true" data-num="${p.num}" data-stat="goals" oninput="updateStatCell(this)">${p.goals||0}</td>
+      <td class="eg-editable" contenteditable="true" data-num="${p.num}" data-stat="assists" oninput="updateStatCell(this)">${p.assists||0}</td>
+      <td style="color:var(--gold-light)">${pts}</td>
+      <td class="eg-editable" contenteditable="true" data-num="${p.num}" data-stat="shots" oninput="updateStatCell(this)">${p.shots||0}</td>
+      <td class="eg-editable" contenteditable="true" data-num="${p.num}" data-stat="shotsOnGoal" oninput="updateStatCell(this)">${p.shotsOnGoal||0}</td>
+      <td class="eg-editable" contenteditable="true" data-num="${p.num}" data-stat="groundBalls" oninput="updateStatCell(this)">${p.groundBalls||0}</td>
+      <td class="eg-editable" contenteditable="true" data-num="${p.num}" data-stat="turnovers" oninput="updateStatCell(this)">${p.turnovers||0}</td>
+      <td class="eg-editable" contenteditable="true" data-num="${p.num}" data-stat="causedTurnovers" oninput="updateStatCell(this)">${p.causedTurnovers||0}</td>
+      <td class="eg-editable" contenteditable="true" data-num="${p.num}" data-stat="faceOffWins" oninput="updateStatCell(this)">${p.faceOffWins||0}</td>
+      <td class="eg-editable" contenteditable="true" data-num="${p.num}" data-stat="faceOffLosses" oninput="updateStatCell(this)">${p.faceOffLosses||0}</td>
+      <td class="eg-editable" contenteditable="true" data-num="${p.num}" data-stat="saves" oninput="updateStatCell(this)">${p.saves||0}</td>
+      <td class="eg-editable" contenteditable="true" data-num="${p.num}" data-stat="goalsAllowed" oninput="updateStatCell(this)">${p.goalsAllowed||0}</td>
+      <td class="eg-editable" contenteditable="true" data-num="${p.num}" data-stat="penalties" oninput="updateStatCell(this)">${p.penalties||0}</td>
+    </tr>`;
+  }).join('');
+
+  // Goal log
+  document.getElementById('eg-goal-count').textContent = game.goals.length;
+  const gt = document.getElementById('eg-goal-tbody');
+  if(!game.goals.length){
+    gt.innerHTML='<tr><td colspan="6" style="color:var(--gray);padding:10px">No goals</td></tr>';
+  } else {
+    gt.innerHTML = game.goals.map(g=>{
+      const sr=roster.find(r=>r.num===String(g.scorer))||{};
+      const ar=g.assistBy?roster.find(r=>r.num===String(g.assistBy))||{}:{};
+      return`<tr>
+        <td>${periodLabel(g.period)}</td>
+        <td style="font-family:monospace;color:var(--gold)">${g.clockTime||'—'}</td>
+        <td class="num-col">${g.scorer}</td>
+        <td style="text-align:left">${sr.first||''} ${sr.last||''}</td>
+        <td>${g.assistBy?'#'+g.assistBy+' '+(ar.first||'')+' '+(ar.last||''):'—'}</td>
+        <td style="font-weight:600">${g.homeScore}–${g.oppScore}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Penalty log
+  document.getElementById('eg-pen-count').textContent = game.penalties.length;
+  const pl = document.getElementById('eg-pen-list');
+  if(!game.penalties.length){
+    pl.innerHTML='<div style="color:var(--gray);font-size:.8rem">No penalties</div>';
+  } else {
+    pl.innerHTML = game.penalties.map(p=>{
+      const rp=roster.find(r=>r.num===String(p.jersey))||{};
+      return`<div class="pen-entry">
+        <div class="pen-entry-top">
+          <span><span class="pen-entry-player">#${p.jersey}</span> ${rp.first||''} ${rp.last||''}</span>
+          <span class="pen-entry-meta">${periodLabel(p.period)}${p.clockTime?' @ '+p.clockTime:''} · ${p.dur}</span>
+        </div>
+        <div class="pen-entry-type">${p.pen}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Event log (same as live tab, with delete buttons)
+  const ef = document.getElementById('eg-log-feed');
+  ef.innerHTML = game.events.slice(0,80).map(ev=>{
+    const name=ev.jersey?rosterName(ev.jersey):'';
+    return`<div class="log-entry ${ev.type||''}">
+      <span class="log-period">${periodLabel(ev.period)}</span>
+      <span class="log-clock">${ev.clockTime||'—'}</span>
+      ${ev.jersey?`<span class="log-num">#${ev.jersey}</span>`:''}
+      <span class="log-text">${name?name+' — ':''}${ev.label}</span>
+      <button class="log-del" onclick="deleteEventAndRefresh(${ev.id})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function updateStatCell(el){
+  const num = el.dataset.num;
+  const stat = el.dataset.stat;
+  const val = parseInt(el.textContent)||0;
+  getPlayer(num)[stat] = val;
+  // Recalc points column in the same row
+  const row = el.closest('tr');
+  const pts = (getPlayer(num).goals||0)+(getPlayer(num).assists||0);
+  row.cells[4].textContent = pts;
+}
+
+function deleteEventAndRefresh(id){
+  deleteEvent(id);
+  renderEndGameSummary();
+}
+
+// ── SAVE LOCALLY (JSON download) ──
+function saveGameLocally(){
+  const snapshot = {
+    meta:{ team:game.team, opp:game.opp, date:game.date, loc:game.loc, level:game.level,
+           format:game.format, periodMins:game.periodMins, scoreHome:game.scoreHome, scoreOpp:game.scoreOpp },
+    players: game.players,
+    goals: game.goals,
+    penalties: game.penalties,
+    events: game.events,
+    timeouts: game.timeouts,
+    roster: roster
+  };
+  const blob = new Blob([JSON.stringify(snapshot,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = game.team+'_vs_'+game.opp+'_'+(game.date||'stats')+'.json';
+  a.click();
+  setTimeout(()=>alert('✅ JSON saved! On iPhone, use the share sheet to send it to Files, iCloud Drive, or any app.'),300);
+}
+
+// ── ICLOUD / FILES (uses share sheet via download) ──
+function saveToiCloud(){
+  // On iOS, triggering a download opens the share sheet which includes Save to Files / iCloud Drive
+  saveGameLocally();
+}
+
+// ── GOOGLE DRIVE ──
+function saveToGoogleDrive(){
+  // Generate the CSV first, then open Google Drive so user can upload
+  const csv = buildCSV();
+  const blob = new Blob([csv],{type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = game.team+'_vs_'+game.opp+'_'+(game.date||'stats')+'.csv';
+  a.click();
+  setTimeout(()=>{
+    if(confirm('CSV downloaded! Open Google Drive to upload it?')){
+      window.open('https://drive.google.com','_blank');
+    }
+  },400);
+}
+
+// ── EMAIL CSV ──
+function emailCSV(){
+  const csv = buildCSV();
+  const blob = new Blob([csv],{type:'text/csv'});
+  const filename = game.team+'_vs_'+game.opp+'_'+(game.date||'stats')+'.csv';
+  // Download the file first (iOS requires this before mailto)
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  // Then open mail with instructions
+  setTimeout(()=>{
+    const subject = encodeURIComponent(game.team+' vs '+game.opp+' — Game Stats ('+( game.date||'stats')+')');
+    const body = encodeURIComponent(
+      'Game stats attached as CSV.\n\n'+
+      game.team+' '+game.scoreHome+' — '+game.scoreOpp+' '+game.opp+'\n'+
+      (game.date?'Date: '+game.date+'\n':'')+
+      (game.loc?'Location: '+game.loc+'\n':'')+
+      '\nOpen the .csv file in Excel or Google Sheets.\n\n— Sent via LAX Stats Tracker'
+    );
+    window.location.href = 'mailto:?subject='+subject+'&body='+body;
+    setTimeout(()=>alert('📎 Tip: The CSV was downloaded to your Files. In Mail, tap the paperclip icon to attach it before sending.'),800);
+  },500);
+}
+
+// ── EMAIL HTML (print-to-PDF ready) ──
+function emailHTML(){
+  const html = buildPrintHTML();
+  const blob = new Blob([html],{type:'text/html'});
+  const filename = game.team+'_vs_'+game.opp+'_'+(game.date||'stats')+'.html';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  setTimeout(()=>{
+    const subject = encodeURIComponent(game.team+' vs '+game.opp+' — Game Stats ('+( game.date||'stats')+')');
+    const body = encodeURIComponent(
+      'Game stats attached.\n\n'+
+      game.team+' '+game.scoreHome+' — '+game.scoreOpp+' '+game.opp+'\n'+
+      (game.date?'Date: '+game.date+'\n':'')+
+      (game.loc?'Location: '+game.loc+'\n':'')+
+      '\nTo convert to PDF: open the .html file in Safari → Share → Print → Pinch out to PDF.\n\n— Sent via LAX Stats Tracker'
+    );
+    window.location.href = 'mailto:?subject='+subject+'&body='+body;
+    setTimeout(()=>alert('📎 Tip: The HTML file was downloaded to your Files. In Mail, tap the paperclip icon to attach it. Recipients can open it in any browser and print/save as PDF.'),800);
+  },500);
+}
+
+// ── BUILD CSV STRING ──
+function buildCSV(){
+  const hdr=['#','Last','First','Goals','Assists','Points','Shots','SOG','GroundBalls','Turnovers','CausedTO','FO-Wins','FO-Losses','Saves','GoalsAllowed','Penalties'];
+  const allNums=new Set([...roster.map(r=>r.num),...Object.keys(game.players)]);
+  const pRows=[...allNums].sort((a,b)=>parseInt(a)-parseInt(b)).map(n=>{
+    const p=getPlayer(n); const rp=roster.find(r=>r.num===n)||{};
+    return[n,rp.last||'',rp.first||'',p.goals||0,p.assists||0,(p.goals||0)+(p.assists||0),
+      p.shots||0,p.shotsOnGoal||0,p.groundBalls||0,p.turnovers||0,p.causedTurnovers||0,
+      p.faceOffWins||0,p.faceOffLosses||0,p.saves||0,p.goalsAllowed||0,p.penalties||0];
+  });
+  const gHdr=['Period','Time','Scorer#','ScorerFirst','ScorerLast','Assist#','AssistFirst','AssistLast','Score'];
+  const gRows=game.goals.map(g=>{
+    const sr=roster.find(r=>r.num===String(g.scorer))||{};
+    const ar=g.assistBy?roster.find(r=>r.num===String(g.assistBy))||{}:{};
+    return[periodLabel(g.period),g.clockTime||'',g.scorer,sr.first||'',sr.last||'',g.assistBy||'',ar.first||'',ar.last||'',`${g.homeScore}-${g.oppScore}`];
+  });
+  const penHdr=['Period','Time','Jersey#','First','Last','PenaltyType','Duration'];
+  const penRows=game.penalties.map(p=>{
+    const rp=roster.find(r=>r.num===String(p.jersey))||{};
+    return[periodLabel(p.period),p.clockTime||'',p.jersey,rp.first||'',rp.last||'',p.pen,p.dur];
+  });
+  return [
+    game.team+' vs '+game.opp,
+    'Date: '+(game.date||'')+'   Location: '+(game.loc||'')+'   Level: '+game.level,
+    'Format: '+(game.format==='halves'?'2 Halves':'4 Quarters')+' ('+game.periodMins+' min each)',
+    'Final: '+game.team+' '+game.scoreHome+' - '+game.scoreOpp+' '+game.opp,
+    '','PLAYER STATS',hdr.join(','),...pRows.map(r=>r.join(',')),
+    '','GOAL LOG',gHdr.join(','),...gRows.map(r=>r.join(',')),
+    '','PENALTY LOG',penHdr.join(','),...penRows.map(r=>r.join(','))
+  ].join('\n');
+}
+
+// ── BUILD PRINT HTML ──
+function buildPrintHTML(){
+  const allNums=new Set([...roster.map(r=>r.num),...Object.keys(game.players)]);
+  const players=[...allNums].map(n=>getPlayer(n)).sort((a,b)=>parseInt(a.num)-parseInt(b.num));
+  const playerRows = players.map(p=>{
+    const rp=roster.find(r=>r.num===p.num)||{};
+    return `<tr>
+      <td>${p.num}</td><td>${rp.last||''}</td><td>${rp.first||''}</td>
+      <td>${p.goals||0}</td><td>${p.assists||0}</td><td>${(p.goals||0)+(p.assists||0)}</td>
+      <td>${p.shots||0}</td><td>${p.shotsOnGoal||0}</td><td>${p.groundBalls||0}</td>
+      <td>${p.turnovers||0}</td><td>${p.causedTurnovers||0}</td>
+      <td>${p.faceOffWins||0}</td><td>${p.faceOffLosses||0}</td>
+      <td>${p.saves||0}</td><td>${p.goalsAllowed||0}</td><td>${p.penalties||0}</td>
+    </tr>`;
+  }).join('');
+
+  const goalRows = game.goals.map(g=>{
+    const sr=roster.find(r=>r.num===String(g.scorer))||{};
+    const ar=g.assistBy?roster.find(r=>r.num===String(g.assistBy))||{}:{};
+    return`<tr>
+      <td>${periodLabel(g.period)}</td><td>${g.clockTime||'—'}</td>
+      <td>${g.scorer}</td><td>${(sr.first||'')+' '+(sr.last||'')}</td>
+      <td>${g.assistBy?'#'+g.assistBy+' '+(ar.first||'')+' '+(ar.last||''):'—'}</td>
+      <td><strong>${g.homeScore}–${g.oppScore}</strong></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" style="color:#888">No goals</td></tr>';
+
+  const penRows = game.penalties.map(p=>{
+    const rp=roster.find(r=>r.num===String(p.jersey))||{};
+    return`<tr>
+      <td>${periodLabel(p.period)}</td><td>${p.clockTime||'—'}</td>
+      <td>${p.jersey}</td><td>${(rp.first||'')+' '+(rp.last||'')}</td>
+      <td>${p.pen}</td><td>${p.dur}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" style="color:#888">No penalties</td></tr>';
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>${game.team} vs ${game.opp} — Stats</title>
+<style>
+  body{font-family:Arial,sans-serif;font-size:10pt;color:#111;padding:20px;max-width:900px;margin:0 auto;}
+  h1{font-size:16pt;margin:0 0 2px}
+  h2{font-size:12pt;margin:16px 0 6px;border-bottom:2px solid #333;padding-bottom:3px;}
+  .header{text-align:center;margin-bottom:16px;}
+  .score{font-size:22pt;font-weight:bold;margin:6px 0;}
+  .meta{font-size:9pt;color:#555;}
+  table{width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:8px;}
+  th{background:#2a5c2a;color:white;padding:5px 4px;text-align:center;}
+  td{padding:4px 4px;text-align:center;border-bottom:1px solid #ddd;}
+  td:nth-child(2),td:nth-child(3),td:nth-child(4){text-align:left;}
+  tr:nth-child(even) td{background:#f5f5f5;}
+  @media print{body{padding:0;}h2{page-break-before:auto;}}
+</style></head><body>
+<div class="header">
+  <h1>${game.team} vs ${game.opp}</h1>
+  <div class="score">${game.team} ${game.scoreHome} &ndash; ${game.scoreOpp} ${game.opp}</div>
+  <div class="meta">${game.date||''} &nbsp;·&nbsp; ${game.loc||''} &nbsp;·&nbsp; ${game.level} &nbsp;·&nbsp; ${game.format==='halves'?'2 Halves':'4 Quarters'} × ${game.periodMins} min</div>
+</div>
+
+<h2>Player Stats</h2>
+<table>
+  <thead><tr><th>#</th><th>Last</th><th>First</th><th>G</th><th>A</th><th>Pts</th><th>S</th><th>SOG</th><th>GB</th><th>TO</th><th>CTO</th><th>FO-W</th><th>FO-L</th><th>Sv</th><th>GA</th><th>Pen</th></tr></thead>
+  <tbody>${playerRows}</tbody>
+</table>
+
+<h2>Goal Log</h2>
+<table>
+  <thead><tr><th>Per.</th><th>Time</th><th>#</th><th>Scorer</th><th>Assist</th><th>Score</th></tr></thead>
+  <tbody>${goalRows}</tbody>
+</table>
+
+<h2>Penalty Log</h2>
+<table>
+  <thead><tr><th>Per.</th><th>Time</th><th>#</th><th>Player</th><th>Penalty</th><th>Duration</th></tr></thead>
+  <tbody>${penRows}</tbody>
+</table>
+
+<div style="margin-top:20px;font-size:8pt;color:#aaa;text-align:center">Generated by LAX Stats Tracker</div>
+</body></html>`;
+}
+
 // Init: show setup screen
 show('setup-screen');
 </script>
