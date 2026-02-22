@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="LAX Stats">
 <title>LAX Stats Tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
   :root {
@@ -800,8 +801,14 @@
       </button>
     </div>
 
+    <!-- Excel Stat Sheet -->
+    <div style="font-family:'Bebas Neue',sans-serif;color:var(--gold);font-size:.9rem;letter-spacing:1px;margin-top:2px">📋 Stat Sheet Export</div>
+    <button class="btn" onclick="exportXLSX()" style="font-size:.95rem;padding:12px;background:linear-gradient(135deg,#1a5c1a,#2e7d32);border:2px solid var(--gold);">
+      📊 Download Excel Stat Sheet (.xlsx)
+    </button>
+
     <!-- Export & Email -->
-    <div style="font-family:'Bebas Neue',sans-serif;color:var(--gold-light);font-size:.85rem;letter-spacing:1px;margin-top:2px">📧 Email Export</div>
+    <div style="font-family:'Bebas Neue',sans-serif;color:var(--gold-light);font-size:.85rem;letter-spacing:1px;margin-top:2px">📧 Email / Other Exports</div>
     <div style="display:flex;gap:8px">
       <button class="btn blue" onclick="emailCSV()" style="flex:1;font-size:.85rem;padding:10px">
         📊 Email CSV
@@ -812,7 +819,7 @@
     </div>
 
     <div style="font-size:.7rem;color:var(--gray);text-align:center;line-height:1.5">
-      CSV opens in Excel / Google Sheets. PDF-ready opens a print-formatted page — use your browser's Print → Save as PDF to create the PDF before attaching.
+      Excel Stat Sheet opens in Excel / Numbers with full formatting. CSV opens in any spreadsheet app. PDF-ready: use Print → Save as PDF.
     </div>
 
   </div>
@@ -934,7 +941,7 @@ const DEFAULT_ROSTER = [
   {num:'49', last:'Olson',          first:'Devon'},
   {num:'69', last:'McAlpine',       first:'Peyton'},
   {num:'88', last:'Matich',         first:'Marty'},
-  {num:'98', last:'Kraines',        first:'Lucas'},
+  {num:'92', last:'Kraines',        first:'Lucas'},
   {num:'99', last:'Fujioka',        first:'Joe'},
 ];
 
@@ -2054,6 +2061,356 @@ function emailHTML(){
 }
 
 // ── BUILD CSV STRING ──
+
+
+// ═══════════════════════════════════════════════════════════════════
+// EXPORT XLSX — Mira Costa Lacrosse Stat Sheet
+// Layout matches user's custom template (screenshot confirmed)
+// Uses SheetJS loaded from CDN
+// ═══════════════════════════════════════════════════════════════════
+function exportXLSX(){
+  if(typeof XLSX === 'undefined'){
+    alert('Excel export requires an internet connection. Please check your connection and try again.');
+    return;
+  }
+
+  // ── Colors ──
+  const GD  = "1F6B1F";  // dark green
+  const GM  = "2E7D32";  // medium green header
+  const GR1 = "F2F2F2";  // light gray row
+  const WHT = "FFFFFF";
+  const GOLT= "FFFFF0";  // cream info cells
+  const GOLD= "D4A81A";
+  const RD  = "8B0000";  // dark red penalties
+  const RDL = "FFF0F0";  // light red penalty rows
+
+  // ── Border helpers ──
+  const thinBdr  = {top:{style:'thin',color:{rgb:'CCCCCC'}},bottom:{style:'thin',color:{rgb:'CCCCCC'}},left:{style:'thin',color:{rgb:'CCCCCC'}},right:{style:'thin',color:{rgb:'CCCCCC'}}};
+  const medBdr   = {top:{style:'medium',color:{rgb:'555555'}},bottom:{style:'medium',color:{rgb:'555555'}},left:{style:'medium',color:{rgb:'555555'}},right:{style:'medium',color:{rgb:'555555'}}};
+  const hdrBdr   = {top:{style:'medium',color:{rgb:'333333'}},bottom:{style:'medium',color:{rgb:'333333'}},left:{style:'thin',color:{rgb:'888888'}},right:{style:'thin',color:{rgb:'888888'}}};
+
+  // ── Cell style factory ──
+  function s(bold,sz,fg,bg,ha,va,wrap){
+    return{
+      font:{name:'Arial',bold:!!bold,sz:sz||9,color:{rgb:fg||'000000'}},
+      fill:{patternType:'solid',fgColor:{rgb:bg||WHT}},
+      alignment:{horizontal:ha||'center',vertical:va||'center',wrapText:!!wrap},
+      border:thinBdr
+    };
+  }
+  function sHdr(bg,fg){return s(true,8,fg||WHT,bg||GM,'center','center',true);}
+
+  // ── By-quarter stat counters ──
+  function countByQtr(statKey,qtr){
+    return game.events.filter(e=>e.period===qtr && e.stat===statKey).length;
+  }
+  function homeGoalsByQtr(qtr){ return game.goals.filter(g=>g.period===qtr).length; }
+  function oppGoalsByQtr(qtr){ return game.events.filter(e=>e.period===qtr && e.stat==='goalsAllowed').length; }
+  function shotsByQtr(qtr){ return countByQtr('shots',qtr)+countByQtr('shotsOnGoal',qtr); }
+
+  const totalPeriods = game.totalPeriods||4;
+  const pLbl = game.format==='halves' ? ['H1','H2'] : ['Q1','Q2','Q3','Q4'];
+
+  function qtrSum(fn){
+    const vals = Array.from({length:totalPeriods},(_,i)=>fn(i+1));
+    let ot=0; for(let q=totalPeriods+1;q<=8;q++) ot+=fn(q);
+    return [...vals, ot, vals.reduce((a,b)=>a+b,0)+ot];
+  }
+
+  // ── All players sorted by number ──
+  const allNums = new Set([...roster.map(r=>r.num),...Object.keys(game.players)]);
+  const players = [...allNums].map(n=>getPlayer(n)).sort((a,b)=>parseInt(a.num)-parseInt(b.num));
+
+  // ════════════════════════════════════════════════════════════════
+  // BUILD WORKSHEET DATA  (AOA = array of arrays with cell objects)
+  // We build row by row, column by column.
+  // Column layout:
+  //   A(0)–N(13)  = player stats (14 cols)
+  //   O(14)       = gap
+  //   P(15)–V(21) = scoring summary + goal log (7 cols)
+  //   W(22)       = gap
+  //   X(23)–AB(27)= penalties (5 cols)
+  // ════════════════════════════════════════════════════════════════
+  const TOTAL_COLS = 28;
+  function emptyRow(){ return Array(TOTAL_COLS).fill(null); }
+
+  // Helper: write a value+style into a slot
+  function cv(val, style){ return {v:val, s:style}; }
+
+  const rows = [];
+
+  // ── ROW 0: Title bar ──
+  {
+    const r = emptyRow();
+    r[0]  = cv("MIRA COSTA MUSTANGS — LACROSSE GAME STAT SHEET",
+                {...s(true,13,GOLD,GD,'center','center'), border:medBdr});
+    r[15] = cv("SCORING SUMMARY", {...s(true,11,GOLD,GD,'center','center'), border:thinBdr});
+    r[23] = cv("PENALTIES",       {...s(true,11,WHT,RD,'center','center'), border:thinBdr});
+    rows.push(r);
+  }
+
+  // ── ROWS 1–7: Game info + score box + scoring summary headers ──
+  const infoData = [
+    ["Home Team:",             game.team],
+    ["Opponent:",              game.opp],
+    ["Date:",                  game.date||''],
+    ["Location:",              game.loc||''],
+    ["Level:",                 game.level||''],
+    ["Format:",                (game.format==='halves'?'2 Halves':'4 Quarters')+' × '+game.periodMins+' min'],
+    ["Timeouts (Home / Opp):", (game.timeouts.home||[]).length+' / '+(game.timeouts.opp||[]).length],
+  ];
+  const sumRowDefs = [
+    ["HOME GOALS",    (q)=>homeGoalsByQtr(q)],
+    ["OPP GOALS",     (q)=>oppGoalsByQtr(q)],
+    ["SHOTS",         (q)=>shotsByQtr(q)],
+    ["SHOTS ON GOAL", (q)=>countByQtr('shotsOnGoal',q)],
+    ["FACE-OFF W",    (q)=>countByQtr('faceOffWins',q)],
+    ["FACE-OFF L",    (q)=>countByQtr('faceOffLosses',q)],
+  ];
+  const sumHdrCols = [...pLbl,'OT','TOT'];
+
+  for(let i=0;i<7;i++){
+    const r = emptyRow();
+    // Label
+    r[0] = cv(infoData[i][0], {...s(true,9,GD,WHT,'left','center'), border:{bottom:{style:'thin',color:{rgb:'DDDDDD'}}}});
+    // Value (spans cols 2–6 effectively — set on col 2 only, merge later)
+    r[2] = cv(infoData[i][1], {...s(false,9,'000000',GOLT,'left','center'), border:{bottom:{style:'thin',color:{rgb:'AAAAAA'}}}});
+    // Score box (set only on first row, merge rows 0–6 cols 7–13)
+    if(i===0){
+      r[7] = cv(
+        "FINAL SCORE\n\n"+game.team+"   "+game.scoreHome+"\nvs\n"+game.opp+"   "+game.scoreOpp,
+        {...s(true,13,GD,GOLT,'center','center',true), border:medBdr}
+      );
+    }
+    // Scoring summary rows (i=0 → header row, i=1–6 → data rows)
+    if(i===0){
+      // Header: CATEGORY | Q1 | Q2 | Q3 | Q4 | OT | TOT
+      r[15] = cv("CATEGORY", sHdr(GM));
+      sumHdrCols.forEach((lbl,j)=>{ r[16+j]=cv(lbl,sHdr(GM)); });
+    } else {
+      // Data row i-1 (i=1 → sumRowDefs[0])
+      const sd = sumRowDefs[i-1];
+      if(sd){
+        const vals = qtrSum(sd[1]);
+        const rowBg = i%2===0 ? GR1 : WHT;
+        r[15] = cv(sd[0], {...s(true,8,WHT,GM,'left','center'), border:thinBdr});
+        vals.forEach((v,j)=>{
+          const isTotal = j===vals.length-1;
+          r[16+j] = cv(v, {...s(isTotal,8.5,'000000',isTotal?GOLT:rowBg,'center','center'), border:thinBdr});
+        });
+      }
+    }
+    // Penalty col headers on row 1 only
+    if(i===1){
+      const penHdrs = ["QTR","TIME","PLAYER #","INFRACTION","DURATION"];
+      penHdrs.forEach((lbl,j)=>{ r[23+j]=cv(lbl,sHdr(RD)); });
+    }
+    rows.push(r);
+  }
+
+  // ── ROW 8: Goal log sub-header "GOAL-BY-GOAL LOG" ──
+  {
+    const r = emptyRow();
+    r[15] = cv("GOAL-BY-GOAL LOG", {...s(true,9,WHT,GD,'center','center'), border:thinBdr});
+    rows.push(r);
+  }
+
+  // ── ROW 9: Player stat column headers + goal log col headers ──
+  {
+    const r = emptyRow();
+    const phdr = ['#','PLAYER NAME','G','A','PTS','SH','SOG','GB','TO','CTO','FO\nWon','FO\nLost','SAVES','GOALS\nALLOWED'];
+    phdr.forEach((lbl,i)=>{ r[i] = cv(lbl, {...sHdr(GM), border:hdrBdr}); });
+    // Goal log col headers
+    const glHdrs = ["QTR","TIME","#","SCORER","ASSIST"];
+    glHdrs.forEach((lbl,i)=>{ r[15+i] = cv(lbl, sHdr(GM)); });
+    rows.push(r);
+  }
+
+  // ── ROWS 10–45: Player data + goal log + penalty data ──
+  const maxDataRows = 36;
+  // Interleave: player rows 0–35, goal log rows 0–34, penalty rows 0–42
+  for(let i=0;i<maxDataRows;i++){
+    const r = emptyRow();
+    const bg = i%2===0 ? GR1 : WHT;
+
+    // Player stat
+    const p = players[i];
+    if(p){
+      const rp = roster.find(r2=>r2.num===p.num)||{};
+      const vals = [
+        p.num,
+        (rp.last||p.name||'')+(rp.first?' '+rp.first:''),
+        p.goals||0, p.assists||0, (p.goals||0)+(p.assists||0),
+        p.shots||0, p.shotsOnGoal||0, p.groundBalls||0,
+        p.turnovers||0, p.causedTurnovers||0,
+        p.faceOffWins||0, p.faceOffLosses||0,
+        p.saves||0, p.goalsAllowed||0,
+      ];
+      vals.forEach((v,ci)=>{
+        r[ci] = cv(v, {...s(false,8.5,'000000',bg,ci===1?'left':'center','center'), border:thinBdr});
+      });
+    } else {
+      // Empty player row
+      for(let ci=0;ci<14;ci++){
+        r[ci] = cv('', {...s(false,8.5,'000000',bg,ci===1?'left':'center','center'), border:thinBdr});
+      }
+    }
+
+    // Goal log (shift by 1: goal log row 0 is spreadsheet data row 0 but display row 1)
+    const g = game.goals[i];
+    if(g){
+      const sr = roster.find(rr=>rr.num===String(g.scorer))||{};
+      const ar = g.assistBy ? roster.find(rr=>rr.num===String(g.assistBy))||{} : null;
+      const glVals = [
+        periodLabel(g.period),
+        g.clockTime||'—',
+        g.scorer,
+        (sr.first||'')+' '+(sr.last||''),
+        ar ? '#'+g.assistBy+' '+(ar.first||'')+' '+(ar.last||'') : '—',
+      ];
+      const glBg = i%2===0 ? GR1 : WHT;
+      glVals.forEach((v,j)=>{
+        const ci = 15+j;
+        r[ci] = cv(v, {...s(false,8.5,'000000',glBg,j>=3?'left':'center','center'), border:thinBdr});
+      });
+    } else if(i===0 && game.goals.length===0){
+      r[15] = cv('No goals', s(false,8.5,'999999',WHT,'center','center'));
+    }
+
+    // Penalty data
+    const pen = game.penalties[i];
+    if(pen){
+      const rp = roster.find(rr=>rr.num===String(pen.jersey))||{};
+      const penBg = i%2===0 ? RDL : WHT;
+      const penVals = [
+        periodLabel(pen.period),
+        pen.clockTime||'—',
+        '#'+pen.jersey+(rp.last?' '+rp.last:''),
+        pen.pen,
+        pen.dur
+      ];
+      penVals.forEach((v,j)=>{
+        r[23+j] = cv(v, {...s(false,8.5,'000000',penBg,j>=2?'left':'center','center'), border:thinBdr});
+      });
+    } else {
+      const penBg = i%2===0 ? RDL : WHT;
+      for(let j=0;j<5;j++){
+        r[23+j] = cv('', {...s(false,8.5,'000000',penBg,'center','center'), border:thinBdr});
+      }
+    }
+
+    rows.push(r);
+  }
+
+  // ── ROW 46: TEAM TOTALS ──
+  {
+    const r = emptyRow();
+    r[0] = cv("TEAM TOTALS", {...s(true,9,WHT,GD,'center','center'), border:thinBdr});
+    r[1] = cv('', {...s(true,9,WHT,GD,'center','center'), border:thinBdr});
+    const statKeys = ['goals','assists',null,'shots','shotsOnGoal','groundBalls','turnovers','causedTurnovers','faceOffWins','faceOffLosses','saves','goalsAllowed'];
+    statKeys.forEach((key,j)=>{
+      const ci = 2+j;
+      let val = '';
+      if(key===null){
+        // PTS = goals + assists total
+        val = players.reduce((sum,p)=>sum+(p.goals||0)+(p.assists||0),0);
+      } else if(key) {
+        val = players.reduce((sum,p)=>sum+(p[key]||0),0);
+      }
+      r[ci] = cv(val, {...s(true,9,WHT,GD,'center','center'), border:thinBdr});
+    });
+    rows.push(r);
+  }
+
+  // ── ROW 47: Legend ──
+  {
+    const r = emptyRow();
+    r[0] = cv(
+      "G=Goals  A=Assists  PTS=Points  SH=Shots  SOG=Shots on Goal  GB=Ground Balls  TO=Turnovers  CTO=Caused TOs  FO-W/L=Face-Off Win/Loss  SV=Saves  GA=Goals Allowed",
+      {...s(false,6.5,'777777',WHT,'left','center',false), border:{}}
+    );
+    r[15] = cv(
+      "Generated by Mira Costa LAX Stats Tracker  ·  tanger888.github.io/LAX-stats/",
+      {...s(false,7,'777777',WHT,'center','center',false), border:{}}
+    );
+    rows.push(r);
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // CREATE WORKBOOK
+  // ════════════════════════════════════════════════════════════════
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+
+  // ── Column widths ──
+  ws['!cols'] = [
+    {wch:4},{wch:20},{wch:5.5},{wch:5.5},{wch:5.5},{wch:5.5},{wch:5.5},
+    {wch:5.5},{wch:5.5},{wch:5.5},{wch:5.5},{wch:5.5},{wch:5.5},{wch:5.5},
+    {wch:1.5},  // gap O
+    {wch:11},{wch:7},{wch:7},{wch:7},{wch:7},{wch:7},{wch:6},
+    {wch:1.5},  // gap W
+    {wch:4.5},{wch:7},{wch:11},{wch:17},{wch:8},
+  ];
+
+  // ── Row heights ──
+  ws['!rows'] = [
+    {hpt:22},  // title
+    ...Array(7).fill({hpt:13}),  // info
+    {hpt:14},  // goal log sub-header
+    {hpt:18},  // col headers
+    ...Array(36).fill({hpt:13}), // data
+    {hpt:15},  // totals
+    {hpt:9},   // legend
+  ];
+
+  // ── Merges ──
+  const merges = [
+    // Title bar
+    {s:{r:0,c:0},  e:{r:0,c:13}},   // left title
+    {s:{r:0,c:15}, e:{r:0,c:21}},   // scoring summary title
+    {s:{r:0,c:23}, e:{r:0,c:27}},   // penalties title
+    // Info labels (col 0 spans 0–1)
+    ...[1,2,3,4,5,6,7].map(r=>({s:{r,c:0},e:{r,c:1}})),
+    // Info values (col 2 spans 2–6)
+    ...[1,2,3,4,5,6,7].map(r=>({s:{r,c:2},e:{r,c:6}})),
+    // Score box (rows 1–7, cols 7–13)
+    {s:{r:1,c:7},  e:{r:7,c:13}},
+    // Goal log sub-header
+    {s:{r:8,c:15}, e:{r:8,c:21}},
+    // Goal log col headers: SCORER spans 18–19, ASSIST spans 20–21
+    {s:{r:9,c:18}, e:{r:9,c:19}},
+    {s:{r:9,c:20}, e:{r:9,c:21}},
+    // Goal log data rows: scorer 18–19, assist 20–21
+    ...Array.from({length:36},(_,i)=>({s:{r:10+i,c:18},e:{r:10+i,c:19}})),
+    ...Array.from({length:36},(_,i)=>({s:{r:10+i,c:20},e:{r:10+i,c:21}})),
+    // Totals: first two cols merged
+    {s:{r:46,c:0}, e:{r:46,c:1}},
+    // Legend
+    {s:{r:47,c:0},  e:{r:47,c:13}},
+    {s:{r:47,c:15}, e:{r:47,c:27}},
+  ];
+  ws['!merges'] = merges;
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Game Stats');
+
+  // ── Roster sheet ──
+  const rosterAOA = [
+    ['ROSTER — '+game.team],
+    ['#','LAST NAME','FIRST NAME'],
+    ...roster.filter(r=>r.num).sort((a,b)=>parseInt(a.num)-parseInt(b.num))
+         .map(r=>[r.num, r.last||'', r.first||''])
+  ];
+  const wsR = XLSX.utils.aoa_to_sheet(rosterAOA);
+  wsR['!cols'] = [{wch:5},{wch:18},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, wsR, 'Roster');
+
+  // ── Download ──
+  const d = game.date||new Date().toISOString().slice(0,10);
+  const fname = (game.team||'MC').replace(/\s+/g,'_')+'_vs_'+(game.opp||'Opp').replace(/\s+/g,'_')+'_'+d+'_StatSheet.xlsx';
+  XLSX.writeFile(wb, fname);
+}
+
+
 function buildCSV(){
   const hdr=['#','Last','First','Goals','Assists','Points','Shots','SOG','GroundBalls','Turnovers','CausedTO','FO-Wins','FO-Losses','Saves','GoalsAllowed','Penalties'];
   const allNums=new Set([...roster.map(r=>r.num),...Object.keys(game.players)]);
