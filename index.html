@@ -97,19 +97,37 @@
   .clock-btn{background:#0e130e;border:1px solid #2e3828;color:var(--gray);border-radius:5px;padding:3px 8px;font-size:.65rem;cursor:pointer;font-family:'DM Sans',sans-serif;}
   .clock-btn.go{border-color:#2a5a2a;color:#4ae84a;}
   .clock-btn.stop{border-color:#5a1a1a;color:var(--accent);}
+  /* ── CLOCK BAR ── */
+  .clock-bar{display:flex;align-items:center;gap:10px;background:#0a120a;border:1px solid #2a3828;border-radius:10px;padding:8px 12px;}
+  .clock-bar-time{flex:1;font-family:'Bebas Neue',sans-serif;font-size:2.2rem;color:var(--gold);text-align:center;letter-spacing:3px;line-height:1;}
+  .clock-bar-time.running{color:#4ae84a;}
+  .clock-bar-time.stopped{color:var(--accent);}
+  .clock-bar-btn{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1px;padding:10px 18px;border-radius:8px;border:none;cursor:pointer;flex-shrink:0;transition:opacity .2s;}
+  .clock-bar-btn.go{background:#1a4a1a;color:#4ae84a;border:2px solid #2a6a2a;}
+  .clock-bar-btn.stop{background:#4a1a1a;color:var(--accent);border:2px solid #6a2a2a;}
+  .clock-bar-btn:active{opacity:.7;}
+
   /* ── LANDSCAPE / IPAD ── */
   @media (orientation:landscape) and (min-width:600px){
     #game-screen{flex-direction:row;flex-wrap:wrap;}
     .game-header{width:100%;flex-shrink:0;}
-    #tab-live{width:50%;border-right:1px solid #2e3828;overflow-y:auto;height:calc(100vh - 58px);}
-    #tab-stats,#tab-pen,#tab-info{width:50%;overflow-y:auto;height:calc(100vh - 58px);}
+    /* Left panel: live tab */
+    #tab-live{width:50%;border-right:1px solid #2e3828;overflow-y:auto;height:calc(100vh - 62px);box-sizing:border-box;}
+    /* Right panel: stats/pen/info — hidden by default, shown when active */
+    #tab-stats,#tab-pen,#tab-info{width:50%;overflow-y:auto;height:calc(100vh - 62px);box-sizing:border-box;}
+    /* In landscape, always show event log on right side alongside live tab */
+    #landscape-log-panel{display:flex !important;flex-direction:column;width:50%;height:calc(100vh - 62px);overflow-y:auto;border-left:1px solid #2e3828;box-sizing:border-box;padding:12px;}
+    /* When live tab active in landscape, show both columns */
     .bottom-nav{width:100%;order:10;}
-    .log-feed{max-height:220px;}
+    .log-feed{max-height:none;flex:1;}
+    /* Bigger quarter button on iPad */
+    .quarter-btn{font-size:1rem;padding:6px 12px !important;}
+    .game-meta .period-val{font-size:1.4rem;}
   }
   @media (min-width:768px){
     .quick-grid{grid-template-columns:repeat(4,1fr);}
     .setup-card{max-width:540px;}
-    #setup-screen>div[style*="max-width"]{max-width:540px;}
+    .quarter-btn{font-size:.9rem;padding:5px 10px;}
   }
 
   /* Voice */
@@ -239,7 +257,7 @@
 ══════════════════════════════════════════════════════ -->
 <div id="setup-screen">
   <h1>LAX<br>Stats</h1>
-  <div style="font-family:'DM Sans',sans-serif;font-size:.72rem;color:#4a5a40;letter-spacing:2px;text-transform:uppercase;margin-top:-8px">v 1.5</div>
+  <div style="font-family:'DM Sans',sans-serif;font-size:.72rem;color:#4a5a40;letter-spacing:2px;text-transform:uppercase;margin-top:-8px">v 2.0</div>
   <p>Voice-powered lacrosse stat tracking for the sideline</p>
 
   <div class="setup-card">
@@ -299,7 +317,7 @@
       <strong>Goals:</strong> "22 goal" · "22 shot" · "22 shot on goal"<br>
       <strong>Defense:</strong> "14 ground ball" · "1 save" · "9 caused turnover"<br>
       <strong>Face-offs:</strong> "3 face off win" · "3 face off loss"<br>
-      <strong>Penalties:</strong> "22 slashing" · "22 cross check" · "22 push" · "22 hold" · "22 crease" · "22 unsportsmanlike" · "22 expulsion"<br>
+      <strong>Penalties:</strong> "22 slash" · "22 cross check" · "22 push" · "22 hold" · "22 crease" · "22 unsportsmanlike" · "22 expulsion"<br>
       <strong>Other:</strong> "timeout" · "opponent timeout" · "next quarter"
     </div>
   </div>
@@ -372,6 +390,12 @@
   <!-- LIVE TAB -->
   <div id="tab-live" class="tab-panel active">
     <div class="voice-area">
+      <!-- Clock control bar above mic -->
+      <div class="clock-bar">
+        <button class="clock-bar-btn go" onclick="clockStart()" id="clock-start-btn">▶ START</button>
+        <div class="clock-bar-time" id="clock-bar-display">12:00</div>
+        <button class="clock-bar-btn stop" onclick="clockStop()" id="clock-stop-btn">■ STOP</button>
+      </div>
       <button class="mic-btn" id="mic-btn" onclick="toggleListening()">
         <span class="mic-icon" id="mic-icon">🎙</span>
         <span id="mic-label">TAP TO SPEAK</span>
@@ -549,14 +573,14 @@
       <div class="cmd-group-title">🟨 Penalties</div>
       <div class="cmd-rule">Syntax: <span class="cmd-kw">penalty [#] [penalty type] [duration] [at/time clock]</span><br>Must start with the word <span class="cmd-kw">penalty</span>. Duration optional (defaults to 1 min). Clock time optional.</div>
       <div class="cmd-example-box" style="margin-bottom:8px">
-        <div class="cmd-ex"><span class="cmd-say">"penalty 22 slashing"</span><span class="cmd-desc">Slashing, 1 min</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"penalty 22 slash"</span><span class="cmd-desc">Slashing, 1 min</span></div>
         <div class="cmd-ex"><span class="cmd-say">"penalty 7 cross check two minute"</span><span class="cmd-desc">Cross check, 2 min</span></div>
         <div class="cmd-ex"><span class="cmd-say">"penalty one push at 8 30"</span><span class="cmd-desc">#1 pushing @ 8:30</span></div>
         <div class="cmd-ex"><span class="cmd-say">"penalty 3 slash thirty seconds at 6"</span><span class="cmd-desc">#3 slash 0:30 @ 6:00</span></div>
       </div>
       <div class="cmd-rule">Penalty keywords:</div>
       <div class="cmd-example-box">
-        <div class="cmd-ex"><span class="cmd-say">"[#] slashing"</span><span class="cmd-desc">Slashing</span></div>
+        <div class="cmd-ex"><span class="cmd-say">"[#] slash"</span><span class="cmd-desc">Slashing</span></div>
         <div class="cmd-ex"><span class="cmd-say">"[#] cross check"</span><span class="cmd-desc">Cross checking</span></div>
         <div class="cmd-ex"><span class="cmd-say">"[#] push"</span><span class="cmd-desc">Pushing</span></div>
         <div class="cmd-ex"><span class="cmd-say">"[#] hold"</span><span class="cmd-desc">Holding</span></div>
@@ -612,6 +636,12 @@
     <button class="nav-tab" onclick="showTab('stats',this)"><span class="nav-icon">📊</span>STATS</button>
     <button class="nav-tab" onclick="showTab('pen',this)"><span class="nav-icon">🟨</span>FOULS</button>
     <button class="nav-tab" onclick="showTab('info',this)"><span class="nav-icon">ℹ️</span>INFO</button>
+  </div>
+
+  <!-- LANDSCAPE EVENT LOG PANEL (right side, iPad landscape only) -->
+  <div id="landscape-log-panel" style="display:none">
+    <div class="section-title" style="margin-bottom:8px">Event Log <span id="landscape-log-count" class="badge">0</span></div>
+    <div class="log-feed" id="landscape-log-feed" style="max-height:none;flex:1;overflow-y:auto"></div>
   </div>
 </div>
 
@@ -830,7 +860,6 @@ const DEFAULT_ROSTER = [
   {num:'10', last:'Brunner',        first:'Cade'},
   {num:'11', last:'Kingston',       first:'Gavin'},
   {num:'12', last:'Jonas',          first:'Gordon'},
-  {num:'14', last:'McGinley',       first:'Connor'},
   {num:'15', last:'Papera',         first:'Luke'},
   {num:'16', last:'van Doornewaard',first:'Beckett'},
   {num:'17', last:'Gauss',          first:'Gavin'},
@@ -840,6 +869,7 @@ const DEFAULT_ROSTER = [
   {num:'24', last:'Sheets',         first:'Braden'},
   {num:'25', last:'Klein',          first:'Jacob'},
   {num:'28', last:'Pike',           first:'Grayson'},
+  {num:'14', last:'McGinley',       first:'Connor'},
   {num:'35', last:'Finnerty',       first:'Caden'},
   {num:'39', last:'Tang',           first:'Hudson'},
   {num:'40', last:'Turner',         first:'Gavin'},
@@ -982,6 +1012,7 @@ function startGame(){
   updateClockDisplay();
   show('game-screen');
   initSpeech();
+  setTimeout(updateLandscapeLayout,100);
 }
 
 // ═══════════════════════════════════════════════════
@@ -1003,16 +1034,20 @@ function changeScore(side,delta){
   if(side==='home'){game.scoreHome=Math.max(0,game.scoreHome+delta);document.getElementById('score-home').textContent=game.scoreHome;}
   else{game.scoreOpp=Math.max(0,game.scoreOpp+delta);document.getElementById('score-opp').textContent=game.scoreOpp;}
 }
-function nextPeriod(){game.period++;updatePeriodDisplay();}
+function nextPeriod(n){
+  if(n!==undefined) game.period=n;
+  else game.period++;
+  updatePeriodDisplay();
+}
 function updatePeriodDisplay(){
   const el=document.getElementById('qtr-display');
   const lbl=document.getElementById('period-label');
   if(game.period<=game.totalPeriods){el.textContent=game.period;lbl.textContent=game.format==='halves'?'HALF':'QTR';}
   else{el.textContent='OT'+(game.period-game.totalPeriods);lbl.textContent='';}
-  // Reset clock to full period time when period changes
+  // Always reset clock to full period time
   clockStop();
-  clockSeconds = game.periodMins * 60;
-  updateClockDisplay();
+  clockSeconds = (game.periodMins||12) * 60;
+  if(typeof updateClockDisplay==='function') updateClockDisplay();
 }
 
 // ═══════════════════════════════════════════════════
@@ -1027,12 +1062,20 @@ function clockFmt(s){
   return m+':'+String(sec).padStart(2,'0');
 }
 function updateClockDisplay(){
+  const t=clockFmt(clockSeconds);
+  // Update header mini-clock
   const el=document.getElementById('game-clock-display');
-  if(!el) return;
-  el.textContent=clockFmt(clockSeconds);
-  el.className='game-clock-time '+(clockRunning?'running':'stopped');
+  if(el){el.textContent=t;el.className='game-clock-time '+(clockRunning?'running':'stopped');}
+  // Update big clock bar above mic
+  const bar=document.getElementById('clock-bar-display');
+  if(bar){bar.textContent=t;bar.className='clock-bar-time '+(clockRunning?'running':'stopped');}
+  // Sync start/stop button states
+  const startBtn=document.getElementById('clock-start-btn');
+  const stopBtn=document.getElementById('clock-stop-btn');
+  if(startBtn) startBtn.style.opacity=clockRunning?'0.4':'1';
+  if(stopBtn) stopBtn.style.opacity=clockRunning?'1':'0.4';
   // Auto-sync the manual-time field with clock when running
-  if(clockRunning) document.getElementById('manual-time').value=clockFmt(clockSeconds);
+  if(clockRunning) document.getElementById('manual-time').value=t;
 }
 function clockStart(){
   if(clockRunning) return;
@@ -1127,13 +1170,22 @@ function wordsToNums(text){
 }
 
 // Extract penalty duration from text (spoken or numeric)
+// Note: wordsToNums has already run, so spoken numbers are already digits
 function extractPenDuration(text){
-  if(/thirty.?second|half.?minute|0:30/.test(text)) return{dur:'0:30',rest:text.replace(/thirty.?second[s]?|half.?minute|0:30/,'').trim()};
-  if(/two.?minute|2.?min/.test(text)) return{dur:'2:00',rest:text.replace(/two.?minute[s]?|2.?min\w*/,'').trim()};
-  if(/three.?minute|3.?min/.test(text)) return{dur:'3:00',rest:text.replace(/three.?minute[s]?|3.?min\w*/,'').trim()};
-  if(/expulsion/.test(text)) return{dur:'Expulsion',rest:text.replace(/expulsion/,'').trim()};
-  // default 1 minute - strip "one minute" if present
-  const rest=text.replace(/one.?minute[s]?|1.?min\w*/,'').trim();
+  // 30 seconds
+  if(/thirty.?second|half.?minute|0:30|30\s*sec/.test(text))
+    return{dur:'0:30',rest:text.replace(/thirty.?second[s]?|half.?minute|0:30|30\s*sec\w*/,'').trim()};
+  // Expulsion
+  if(/expulsion/i.test(text))
+    return{dur:'Expulsion',rest:text.replace(/expulsion/i,'').trim()};
+  // 3 minutes  
+  if(/three.?minute|3\s*min/i.test(text))
+    return{dur:'3:00',rest:text.replace(/three.?minute[s]?|3\s*min\w*/i,'').trim()};
+  // 2 minutes
+  if(/two.?minute|2\s*min/i.test(text))
+    return{dur:'2:00',rest:text.replace(/two.?minute[s]?|2\s*min\w*/i,'').trim()};
+  // 1 minute (explicit or default)
+  const rest=text.replace(/one.?minute[s]?|1\s*min\w*/i,'').trim();
   return{dur:'1:00',rest};
 }
 
@@ -1234,7 +1286,7 @@ function setListening(val){
 // VOICE PARSING
 // ═══════════════════════════════════════════════════
 const PENALTY_TYPES={
-  'slashing':'Slashing','slashing':'Slashing',
+  'slashing':'Slashing','sloshing':'Slashing','slash':'Slashing',
   'cross checking':'Cross Checking','cross check':'Cross Checking',
   'pushing':'Pushing','push':'Pushing',
   'holding':'Holding','hold':'Holding',
@@ -1329,6 +1381,17 @@ function processVoice(rawText){
     resultEl.innerHTML+=`<div class="parsed">✅ ${game.format==='halves'?'Half':'Quarter'} → ${game.period}</div>`;
     return;
   }
+  // "2nd quarter", "3rd quarter", "4th quarter", "second half" etc.
+  const periodMatch=text.match(/\b(1st|2nd|3rd|4th|first|second|third|fourth)\s+(quarter|half|period)\b/i);
+  if(periodMatch){
+    const pMap={'1st':1,'first':1,'2nd':2,'second':2,'3rd':3,'third':3,'4th':4,'fourth':4};
+    const pNum=pMap[periodMatch[1].toLowerCase()];
+    if(pNum){
+      nextPeriod(pNum);
+      resultEl.innerHTML+=`<div class="parsed">✅ Advanced to ${periodMatch[1]} ${periodMatch[2]}</div>`;
+    }
+    return;
+  }
 
   // Step 4: find jersey number (digits only — word conversion already done above)
   const numMatch=text.match(/\b(\d{1,2})\b/);
@@ -1371,8 +1434,22 @@ function logStat(num,statDef,clockTime){
     game.goals.push({id:eventId,period:game.period,clockTime:clockTime||null,scorer:num,assistBy:null,homeScore:game.scoreHome+1,oppScore:game.scoreOpp});
   }
   if(statDef.stat==='assists'){
+    // Only auto-link to last unassisted goal if it was recorded > 30 seconds ago
+    // (clockTime is a string like "8:30" — compare numerically)
     const lastGoal=[...game.goals].reverse().find(g=>!g.assistBy);
-    if(lastGoal)lastGoal.assistBy=num;
+    if(lastGoal){
+      let shouldLink=true;
+      if(lastGoal.clockTime && clockTime){
+        // Both have times — check if goal was scored more than 30s ago
+        const parseT=t=>{const p=t.split(':');return parseInt(p[0])*60+parseInt(p[1]);};
+        const goalSecs=parseT(lastGoal.clockTime);
+        const nowSecs=parseT(clockTime);
+        // Clock counts DOWN — so goal time > now time means goal was earlier
+        const diff=Math.abs(goalSecs-nowSecs);
+        shouldLink = diff >= 30;
+      }
+      if(shouldLink) lastGoal.assistBy=num;
+    }
   }
   game.events.unshift(ev);renderLog();
 }
@@ -1460,13 +1537,10 @@ function logEntryClass(ev){
   if(ev.type==='timeout') return 'log-blue';
   return '';
 }
-function renderLog(){
-  const feed=document.getElementById('log-feed');
-  document.getElementById('log-count').textContent=game.events.length;
-  feed.innerHTML=game.events.slice(0,60).map(ev=>{
+function buildLogHTML(events){
+  return events.slice(0,80).map(ev=>{
     const name=ev.jersey?rosterName(ev.jersey):'';
     const colorClass=logEntryClass(ev);
-    // Timestamp goes at BEGINNING inline
     const timeTag=ev.clockTime?`<span class="log-time-stamp">${ev.clockTime}</span>`:'';
     const durTag=ev.penDur?`<span class="log-pen-dur">${ev.penDur}</span>`:'';
     return`<div class="log-entry ${colorClass}">
@@ -1477,6 +1551,17 @@ function renderLog(){
       <button class="log-del" onclick="deleteEvent(${ev.id})">✕</button>
     </div>`;
   }).join('');
+}
+function renderLog(){
+  const html=buildLogHTML(game.events);
+  const feed=document.getElementById('log-feed');
+  if(feed) feed.innerHTML=html;
+  document.getElementById('log-count').textContent=game.events.length;
+  // Also update landscape log panel if visible
+  const lp=document.getElementById('landscape-log-feed');
+  if(lp) lp.innerHTML=html;
+  const lc=document.getElementById('landscape-log-count');
+  if(lc) lc.textContent=game.events.length;
 }
 function deleteEvent(id){
   const ev=game.events.find(e=>e.id===id);if(!ev)return;
@@ -1919,6 +2004,20 @@ function buildPrintHTML(){
 <div style="margin-top:20px;font-size:8pt;color:#aaa;text-align:center">Generated by LAX Stats Tracker</div>
 </body></html>`;
 }
+
+// ── Landscape panel visibility ──
+function updateLandscapeLayout(){
+  const isLandscape = window.innerWidth > window.innerHeight && window.innerWidth >= 600;
+  const panel = document.getElementById('landscape-log-panel');
+  if(panel) panel.style.display = isLandscape ? 'flex' : 'none';
+  // In landscape, live tab always stays visible on left
+  if(isLandscape){
+    const liveTab = document.getElementById('tab-live');
+    if(liveTab) liveTab.style.display = 'flex';
+  }
+}
+window.addEventListener('resize', updateLandscapeLayout);
+window.addEventListener('orientationchange', ()=>setTimeout(updateLandscapeLayout,200));
 
 // Init: show setup screen
 show('setup-screen');
