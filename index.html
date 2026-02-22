@@ -76,27 +76,49 @@
 
   /* ── GAME SCREEN ── */
   #game-screen{display:none;flex-direction:column;min-height:100vh;}
-  .game-header{background:var(--panel);border-bottom:2px solid var(--gold);padding:10px 12px;position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:10px;}
+  .game-header{background:var(--panel);border-bottom:2px solid var(--gold);padding:8px 10px;position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:8px;flex-wrap:nowrap;}
   .game-header .teams{flex:1;min-width:0;}
   .game-header .team-name{font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--gold);letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .game-header .vs{color:var(--gray);font-size:.65rem;}
-  .scoreboard{display:flex;align-items:center;gap:6px;background:#0e130e;border:1px solid #2e3828;border-radius:8px;padding:5px 10px;}
+
+  /* Period / quarter tracker */
+  .period-wrap{display:flex;align-items:center;gap:3px;background:#0a100a;border:1px solid #2a4a2a;border-radius:10px;padding:4px 6px;flex-shrink:0;}
+  .period-nav-btn{background:none;border:1px solid #3a5a3a;color:var(--gold);width:28px;height:28px;border-radius:6px;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .period-nav-btn:active{background:#1a3a1a;}
+  .period-center{display:flex;flex-direction:column;align-items:center;min-width:38px;}
+  .period-lbl{font-size:.5rem;color:var(--gray);letter-spacing:1px;text-transform:uppercase;}
+  .period-num{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--gold);line-height:1;letter-spacing:1px;}
+
+  /* Game clock (header display only) */
+  .game-clock-wrap{display:flex;flex-direction:column;align-items:center;background:#0a100a;border:1px solid #2e3828;border-radius:8px;padding:4px 8px;flex-shrink:0;}
+  .game-clock-time{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;color:var(--gold);letter-spacing:2px;line-height:1;}
+  .game-clock-time.running{color:#4ae84a;}
+  .game-clock-time.stopped{color:var(--accent);}
+  .hdr-sublabel{font-size:.5rem;color:var(--gray);text-align:center;letter-spacing:.5px;margin-top:1px;}
+
+  /* Penalty countdown clock */
+  .pen-clock-wrap{display:flex;flex-direction:column;align-items:center;background:#1a0808;border:1px solid #4a1a1a;border-radius:8px;padding:4px 8px;flex-shrink:0;min-width:60px;}
+  .pen-clock-wrap.active{border-color:#e84a4a;box-shadow:0 0 6px rgba(232,74,74,.3);}
+  .pen-clock-wrap.inactive{opacity:.4;}
+  .pen-clock-time{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;color:#e84a4a;letter-spacing:2px;line-height:1;}
+  .pen-clock-time.flash{animation:penFlash .3s ease-in-out;}
+  @keyframes penFlash{0%,100%{color:#e84a4a;background:transparent;}50%{color:#fff;background:#e84a4a;border-radius:4px;}}
+
+  /* Scoreboard */
+  .scoreboard{display:flex;align-items:center;gap:6px;background:#0e130e;border:1px solid #2e3828;border-radius:8px;padding:5px 8px;flex-shrink:0;}
   .score-num{font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--white);min-width:26px;text-align:center;}
   .score-dash{color:var(--gray);font-size:1rem;}
   .score-btn{background:none;border:1px solid #3a4030;color:var(--gray);width:22px;height:22px;border-radius:4px;font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-  .game-meta{display:flex;align-items:center;gap:6px;background:#0e130e;border:1px solid #2e3828;border-radius:8px;padding:5px 8px;flex-shrink:0;}
-  .period-label{font-size:.62rem;color:var(--gray);text-align:center;}
-  .period-val{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--gold);text-align:center;}
-  .quarter-btn{background:none;border:1px solid #3a4030;color:var(--gray);padding:2px 5px;border-radius:4px;font-size:.75rem;cursor:pointer;}
-  .clock-display{font-family:'Bebas Neue',sans-serif;font-size:.78rem;color:#4a6a50;text-align:center;}
-  .game-clock-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;background:#0a100a;border:1px solid #2e3828;border-radius:8px;padding:5px 10px;flex-shrink:0;}
-  .game-clock-time{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--gold);letter-spacing:2px;line-height:1;}
-  .game-clock-time.running{color:#4ae84a;}
-  .game-clock-time.stopped{color:var(--accent);}
-  .clock-ctrl-row{display:flex;gap:4px;}
-  .clock-btn{background:#0e130e;border:1px solid #2e3828;color:var(--gray);border-radius:5px;padding:3px 8px;font-size:.65rem;cursor:pointer;font-family:'DM Sans',sans-serif;}
-  .clock-btn.go{border-color:#2a5a2a;color:#4ae84a;}
-  .clock-btn.stop{border-color:#5a1a1a;color:var(--accent);}
+
+  /* ── CLOCK BAR (above mic, bigger START/STOP) ── */
+  .clock-bar{display:flex;align-items:center;gap:10px;background:#0a120a;border:1px solid #2a3828;border-radius:10px;padding:8px 12px;}
+  .clock-bar-time{flex:1;font-family:'Bebas Neue',sans-serif;font-size:2.2rem;color:var(--gold);text-align:center;letter-spacing:3px;line-height:1;}
+  .clock-bar-time.running{color:#4ae84a;}
+  .clock-bar-time.stopped{color:var(--accent);}
+  .clock-bar-btn{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1px;padding:10px 18px;border-radius:8px;border:none;cursor:pointer;flex-shrink:0;transition:opacity .2s;white-space:nowrap;}
+  .clock-bar-btn.go{background:#1a4a1a;color:#4ae84a;border:2px solid #2a6a2a;}
+  .clock-bar-btn.stop{background:#4a1a1a;color:var(--accent);border:2px solid #6a2a2a;}
+  .clock-bar-btn:active{opacity:.7;}
   /* ── CLOCK BAR ── */
   .clock-bar{display:flex;align-items:center;gap:10px;background:#0a120a;border:1px solid #2a3828;border-radius:10px;padding:8px 12px;}
   .clock-bar-time{flex:1;font-family:'Bebas Neue',sans-serif;font-size:2.2rem;color:var(--gold);text-align:center;letter-spacing:3px;line-height:1;}
@@ -111,24 +133,48 @@
   @media (orientation:landscape) and (min-width:600px){
     #game-screen{flex-direction:row;flex-wrap:wrap;}
     .game-header{width:100%;flex-shrink:0;}
-    /* Left panel: live tab */
-    #tab-live{width:50%;border-right:1px solid #2e3828;overflow-y:auto;height:calc(100vh - 62px);box-sizing:border-box;}
-    /* Right panel: stats/pen/info — hidden by default, shown when active */
-    #tab-stats,#tab-pen,#tab-info{width:50%;overflow-y:auto;height:calc(100vh - 62px);box-sizing:border-box;}
-    /* In landscape, always show event log on right side alongside live tab */
-    #landscape-log-panel{display:flex !important;flex-direction:column;width:50%;height:calc(100vh - 62px);overflow-y:auto;border-left:1px solid #2e3828;box-sizing:border-box;padding:12px;}
-    /* When live tab active in landscape, show both columns */
+    /* Left panel: 65% — mic, quick buttons, clock bar */
+    #tab-live{width:65%;border-right:1px solid #2e3828;overflow-y:auto;height:calc(100vh - 68px);box-sizing:border-box;}
+    /* Right panel: stats/pen/info tabs — 35% */
+    #tab-stats,#tab-pen,#tab-info{width:35%;overflow-y:auto;height:calc(100vh - 68px);box-sizing:border-box;}
+    /* Right panel: scrolling event log — 35% */
+    #landscape-log-panel{display:flex !important;flex-direction:column;width:35%;height:calc(100vh - 68px);overflow-y:auto;border-left:1px solid #2e3828;box-sizing:border-box;padding:10px 12px;}
+    /* Penalty bar in landscape - more compact */
+    .pen-bar{padding:5px 10px;}
+    .pen-bar-time{font-size:1.4rem;}
+    /* Period nav buttons bigger on iPad */
+    .period-nav-btn{width:36px;height:36px;font-size:1.1rem;}
+    .period-num{font-size:2rem;}
     .bottom-nav{width:100%;order:10;}
     .log-feed{max-height:none;flex:1;}
     /* Bigger quarter button on iPad */
-    .quarter-btn{font-size:1rem;padding:6px 12px !important;}
+    .quarter-btn{font-size:1rem;padding:6px 14px !important;}
     .game-meta .period-val{font-size:1.4rem;}
+    /* Clock bar — prevent button clipping in landscape */
+    .clock-bar{padding:6px 10px;gap:8px;}
+    .clock-bar-btn{font-size:.95rem;padding:9px 14px;white-space:nowrap;}
+    .clock-bar-time{font-size:1.9rem;min-width:80px;}
+    /* Quick grid — 4 columns on wide screen */
+    .quick-grid{grid-template-columns:repeat(4,1fr);}
+    /* Voice area tighter in landscape */
+    .voice-area{padding:10px 12px;gap:8px;}
+    .mic-btn{padding:12px 16px;}
   }
   @media (min-width:768px){
-    .quick-grid{grid-template-columns:repeat(4,1fr);}
     .setup-card{max-width:540px;}
     .quarter-btn{font-size:.9rem;padding:5px 10px;}
   }
+
+  /* Penalty bar (below clock bar above quick buttons) */
+  .pen-bar{display:flex;align-items:center;gap:10px;background:#160808;border:1px solid #3a1a1a;border-radius:10px;padding:8px 12px;}
+  .pen-bar-icon{font-size:1.4rem;flex-shrink:0;}
+  .pen-bar-info{flex:1;min-width:0;}
+  .pen-bar-label{font-size:.7rem;color:#c06060;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pen-bar-time{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:#e84a4a;letter-spacing:3px;line-height:1;}
+  .pen-bar-time.expired{color:#666;animation:none;}
+  .pen-bar-clear{background:none;border:1px solid #3a1a1a;color:#804040;border-radius:6px;padding:4px 8px;font-size:.8rem;cursor:pointer;flex-shrink:0;}
+  .pen-bar-clear:hover{border-color:#e84a4a;color:#e84a4a;}
+  @keyframes flashRed{0%,100%{background:transparent;color:#e84a4a;}50%{background:#e84a4a;color:#fff;border-radius:6px;}}
 
   /* Voice */
   .voice-area{padding:14px;display:flex;flex-direction:column;gap:10px;}
@@ -257,7 +303,7 @@
 ══════════════════════════════════════════════════════ -->
 <div id="setup-screen">
   <h1>LAX<br>Stats</h1>
-  <div style="font-family:'DM Sans',sans-serif;font-size:.72rem;color:#4a5a40;letter-spacing:2px;text-transform:uppercase;margin-top:-8px">v 2.0</div>
+  <div style="font-family:'DM Sans',sans-serif;font-size:.72rem;color:#4a5a40;letter-spacing:2px;text-transform:uppercase;margin-top:-8px">v 2.5</div>
   <p>Voice-powered lacrosse stat tracking for the sideline</p>
 
   <div class="setup-card">
@@ -351,25 +397,30 @@
 ══════════════════════════════════════════════════════ -->
 <div id="game-screen">
   <div class="game-header">
-    <!-- Logo -->
+    <!-- Logo + Team name (left) -->
     <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjEwIj4KICA8ZGVmcz4KICAgIDxjbGlwUGF0aCBpZD0ic2hpZWxkLWNsaXAiPgogICAgICA8cGF0aCBkPSJNMTAwIDggTDE3NSAyOCBMMTc1IDExNSBRMTc1IDE3MCAxMDAgMjAwIFEyNSAxNzAgMjUgMTE1IEwyNSAyOCBaIi8+CiAgICA8L2NsaXBQYXRoPgogIDwvZGVmcz4KCiAgPCEtLSBPdXRlciBnbG93IHJpbmcgLS0+CiAgPGNpcmNsZSBjeD0iMTAwIiBjeT0iMTAwIiByPSI5NSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMWE0YTFhIiBzdHJva2Utd2lkdGg9IjEiIG9wYWNpdHk9IjAuMyIvPgoKICA8IS0tIFNoaWVsZCAtLT4KICA8cGF0aCBkPSJNMTAwIDggTDE3NSAyOCBMMTc1IDExNSBRMTc1IDE3MCAxMDAgMjAwIFEyNSAxNzAgMjUgMTE1IEwyNSAyOCBaIgogICAgICAgIGZpbGw9IiMxYTRhMWEiIHN0cm9rZT0iI2M4YTgzMCIgc3Ryb2tlLXdpZHRoPSI0Ii8+CiAgPHBhdGggZD0iTTEwMCAxNiBMMTY3IDM0IEwxNjcgMTE1IFExNjcgMTYzIDEwMCAxOTEgUTMzIDE2MyAzMyAxMTUgTDMzIDM0IFoiCiAgICAgICAgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMmE2YTJhIiBzdHJva2Utd2lkdGg9IjEuNSIvPgoKICA8IS0tIExhdXJlbCBsZWF2ZXMgbGVmdCAtLT4KICA8ZyBmaWxsPSIjZTBlMGQwIiBvcGFjaXR5PSIwLjg1Ij4KICAgIDxlbGxpcHNlIGN4PSIzMCIgY3k9IjcyIiByeD0iNyIgcnk9IjMuNSIgdHJhbnNmb3JtPSJyb3RhdGUoLTUwLDMwLDcyKSIvPgogICAgPGVsbGlwc2UgY3g9IjIyIiBjeT0iODgiIHJ4PSI3IiByeT0iMy41IiB0cmFuc2Zvcm09InJvdGF0ZSgtNjAsMjIsODgpIi8+CiAgICA8ZWxsaXBzZSBjeD0iMTgiIGN5PSIxMDUiIHJ4PSI3IiByeT0iMy41IiB0cmFuc2Zvcm09InJvdGF0ZSgtNzAsMTgsMTA1KSIvPgogICAgPGVsbGlwc2UgY3g9IjIwIiBjeT0iMTIyIiByeD0iNyIgcnk9IjMuNSIgdHJhbnNmb3JtPSJyb3RhdGUoLTgwLDIwLDEyMikiLz4KICAgIDxlbGxpcHNlIGN4PSIyNiIgY3k9IjEzNyIgcng9IjYiIHJ5PSIzIiB0cmFuc2Zvcm09InJvdGF0ZSgtODUsMjYsMTM3KSIvPgogIDwvZz4KICA8IS0tIExhdXJlbCBsZWF2ZXMgcmlnaHQgLS0+CiAgPGcgZmlsbD0iI2UwZTBkMCIgb3BhY2l0eT0iMC44NSI+CiAgICA8ZWxsaXBzZSBjeD0iMTcwIiBjeT0iNzIiIHJ4PSI3IiByeT0iMy41IiB0cmFuc2Zvcm09InJvdGF0ZSg1MCwxNzAsNzIpIi8+CiAgICA8ZWxsaXBzZSBjeD0iMTc4IiBjeT0iODgiIHJ4PSI3IiByeT0iMy41IiB0cmFuc2Zvcm09InJvdGF0ZSg2MCwxNzgsODgpIi8+CiAgICA8ZWxsaXBzZSBjeD0iMTgyIiBjeT0iMTA1IiByeD0iNyIgcnk9IjMuNSIgdHJhbnNmb3JtPSJyb3RhdGUoNzAsMTgyLDEwNSkiLz4KICAgIDxlbGxpcHNlIGN4PSIxODAiIGN5PSIxMjIiIHJ4PSI3IiByeT0iMy41IiB0cmFuc2Zvcm09InJvdGF0ZSg4MCwxODAsMTIyKSIvPgogICAgPGVsbGlwc2UgY3g9IjE3NCIgY3k9IjEzNyIgcng9IjYiIHJ5PSIzIiB0cmFuc2Zvcm09InJvdGF0ZSg4NSwxNzQsMTM3KSIvPgogIDwvZz4KCiAgPCEtLSBIb3JzZSBoZWFkIGFuZCBuZWNrICh3aGl0ZSwgZmFjaW5nIHJpZ2h0KSAtLT4KICA8ZyBjbGlwLXBhdGg9InVybCgjc2hpZWxkLWNsaXApIj4KICAgIDwhLS0gTmVjayAtLT4KICAgIDxwYXRoIGQ9Ik01MiAxNDAgUTQ4IDExNSA1NSA5NSBRNjIgNzUgNzUgNjIgUTg1IDUyIDk1IDQ4IFExMDUgNDQgMTEwIDUwIFExMTUgNTYgMTA4IDcwIFExMDAgODQgOTAgOTUgUTc4IDEwOCA3MiAxMjUgUTY2IDEzOCA2OCAxNTIgWiIKICAgICAgICAgIGZpbGw9IndoaXRlIiBzdHJva2U9IiNkZGQiIHN0cm9rZS13aWR0aD0iMC41Ii8+CiAgICA8IS0tIEhlYWQgLS0+CiAgICA8cGF0aCBkPSJNOTUgNDggUTEwMCAzMCAxMTIgMjIgUTEyNCAxNSAxMzYgMTggUTE1MCAyMiAxNTggMzYgUTE2NCA0OCAxNjAgNjIgUTE1NiA3NCAxNDggODAgUTEzOCA4NiAxMjYgODQgUTExMiA4MCAxMDUgNzAgUTk4IDYwIDk1IDQ4IFoiCiAgICAgICAgICBmaWxsPSJ3aGl0ZSIgc3Ryb2tlPSIjY2NjIiBzdHJva2Utd2lkdGg9IjAuNSIvPgogICAgPCEtLSBNdXp6bGUgLS0+CiAgICA8cGF0aCBkPSJNMTQ4IDgwIFExNjIgNzggMTcwIDg4IFExNzYgOTggMTcyIDExMCBRMTY4IDEyMCAxNTggMTIyIFExNDggMTIyIDE0MyAxMTQgUTEzOCAxMDUgMTQwIDk0IFExNDIgODYgMTQ4IDgwIFoiCiAgICAgICAgICBmaWxsPSJ3aGl0ZSIgc3Ryb2tlPSIjY2NjIiBzdHJva2Utd2lkdGg9IjAuNSIvPgogICAgPCEtLSBFYXIgLS0+CiAgICA8cGF0aCBkPSJNMTEyIDIyIFExMDYgOCAxMTYgNCBRMTI2IDIgMTI4IDE2IFExMjAgMTYgMTEyIDIyIFoiIGZpbGw9IndoaXRlIi8+CiAgICA8cGF0aCBkPSJNMTE0IDIwIFExMTAgMTAgMTE4IDggUTEyNCA4IDEyNCAxNiBRMTIwIDE1IDExNCAyMCBaIiBmaWxsPSIjZThlOGUwIi8+CiAgICA8IS0tIE1hbmUgKGRhcmsgZ3JlZW4gZmxvd2luZykgLS0+CiAgICA8cGF0aCBkPSJNOTUgNDggUTg4IDU4IDgyIDcyIFE3NiA4NiA3NCAxMDIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzFhNGExYSIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICAgIDxwYXRoIGQ9Ik0xMDAgNDQgUTkyIDU2IDg1IDcwIFE3OCA4NCA3NiAxMDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzFhNGExYSIgc3Ryb2tlLXdpZHRoPSIzLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPHBhdGggZD0iTTEwNiA0MCBROTggNTIgOTAgNjYgUTgyIDgwIDgwIDk2IiBmaWxsPSJub25lIiBzdHJva2U9IiMxYTRhMWEiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICAgIDwhLS0gRXllIC0tPgogICAgPGNpcmNsZSBjeD0iMTMyIiBjeT0iNDAiIHI9IjYiIGZpbGw9IiMwYTIwMGEiLz4KICAgIDxjaXJjbGUgY3g9IjEzMCIgY3k9IjM4IiByPSIyIiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC42Ii8+CiAgICA8IS0tIE5vc3RyaWwgLS0+CiAgICA8ZWxsaXBzZSBjeD0iMTY0IiBjeT0iMTA4IiByeD0iNSIgcnk9IjMuNSIgZmlsbD0iI2QwYzhjMCIvPgogICAgPCEtLSBCbGFjayBvdXRsaW5lIGFjY2VudHMgLS0+CiAgICA8cGF0aCBkPSJNOTUgNDggUTEwMCAzMCAxMTIgMjIgUTEyNCAxNSAxMzYgMTggUTE1MCAyMiAxNTggMzYgUTE2NCA0OCAxNjAgNjIgUTE1NiA3NCAxNDggODAiCiAgICAgICAgICBmaWxsPSJub25lIiBzdHJva2U9IiMxYTFhMWEiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgICA8cGF0aCBkPSJNMTQ4IDgwIFExNjIgNzggMTcwIDg4IFExNzYgOTggMTcyIDExMCBRMTY4IDEyMCAxNTggMTIyIFExNDggMTIyIDE0MyAxMTQiCiAgICAgICAgICBmaWxsPSJub25lIiBzdHJva2U9IiMxYTFhMWEiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgICA8cGF0aCBkPSJNNTIgMTQwIFE0OCAxMTUgNTUgOTUgUTYyIDc1IDc1IDYyIFE4NSA1MiA5NSA0OCIKICAgICAgICAgIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzFhMWExYSIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICA8L2c+CgogIDwhLS0gQmFubmVyIC0tPgogIDxwYXRoIGQ9Ik0yMCAxNDMgTDE4MCAxNDMgTDE3NCAxNjAgTDEwMCAxNjQgTDI2IDE2MCBaIiBmaWxsPSIjYzhhODMwIi8+CiAgPHBhdGggZD0iTTIwIDE0MyBMMTIgMTU3IEwyMCAxNjUgTDI2IDE2MCBMMjAgMTQzIFoiIGZpbGw9IiNhODg4MjAiLz4KICA8cGF0aCBkPSJNMTgwIDE0MyBMMTg4IDE1NyBMMTgwIDE2NSBMMTc0IDE2MCBMMTgwIDE0MyBaIiBmaWxsPSIjYTg4ODIwIi8+CiAgPHRleHQgeD0iMTAwIiB5PSIxNTgiIGZvbnQtZmFtaWx5PSJBcmlhbCBCbGFjaywgSW1wYWN0LCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE2IgogICAgICAgIGZvbnQtd2VpZ2h0PSI5MDAiIGZpbGw9IiMwYTJhMGEiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGxldHRlci1zcGFjaW5nPSIxIj5NSVJBIENPU1RBPC90ZXh0PgoKICA8IS0tIENyb3NzZWQgbGFjcm9zc2Ugc3RpY2tzIC0tPgogIDxnIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC45Ij4KICAgIDwhLS0gU3RpY2sgMTogbGVmdCBoZWFkIHRvIHJpZ2h0IGhhbmRsZSAtLT4KICAgIDxsaW5lIHgxPSI0OCIgeTE9IjE5NSIgeDI9IjEwNSIgeTI9IjE3MiIgc3Ryb2tlLXdpZHRoPSIzLjUiLz4KICAgIDxlbGxpcHNlIGN4PSI0MiIgY3k9IjE5NiIgcng9IjEwIiByeT0iNiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyLjUiIHRyYW5zZm9ybT0icm90YXRlKC0yNSw0MiwxOTYpIi8+CiAgICA8IS0tIFN0aWNrIDI6IHJpZ2h0IGhlYWQgdG8gbGVmdCBoYW5kbGUgLS0+CiAgICA8bGluZSB4MT0iMTUyIiB5MT0iMTk1IiB4Mj0iOTUiIHkyPSIxNzIiIHN0cm9rZS13aWR0aD0iMy41Ii8+CiAgICA8ZWxsaXBzZSBjeD0iMTU4IiBjeT0iMTk2IiByeD0iMTAiIHJ5PSI2IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIuNSIgdHJhbnNmb3JtPSJyb3RhdGUoMjUsMTU4LDE5NikiLz4KICA8L2c+Cjwvc3ZnPg==" alt="MC" style="width:42px;height:42px;flex-shrink:0;border-radius:6px;">
-    <!-- Team & period -->
-    <div class="teams" style="flex:1;min-width:0">
+    <div class="teams" style="min-width:0">
       <div class="team-name" id="hdr-team">Mira Costa Mustangs</div>
       <div class="vs">vs <span id="hdr-opp">Opponent</span></div>
-      <div style="display:flex;align-items:center;gap:4px;margin-top:2px">
-        <span class="period-label" id="period-label" style="font-size:.6rem;color:var(--gray)">QTR</span>
-        <span class="period-val" id="qtr-display" style="font-size:.95rem">1</span>
-        <button class="quarter-btn" onclick="nextPeriod()" style="font-size:.6rem;padding:1px 4px">▶</button>
-      </div>
     </div>
-    <!-- Live game clock -->
+    <!-- Quarter tracker (prominent, between team and clock) -->
+    <div class="period-wrap">
+      <button class="period-nav-btn" onclick="nextPeriod(game.period-1)" title="Previous period">◀</button>
+      <div class="period-center">
+        <div class="period-lbl" id="period-label">QTR</div>
+        <div class="period-num" id="qtr-display">1</div>
+      </div>
+      <button class="period-nav-btn" onclick="nextPeriod()" title="Next period">▶</button>
+    </div>
+    <!-- Game clock (display only in header) -->
     <div class="game-clock-wrap">
       <div class="game-clock-time stopped" id="game-clock-display">12:00</div>
-      <div class="clock-ctrl-row">
-        <button class="clock-btn go" onclick="clockStart()" title="Start clock">▶ GO</button>
-        <button class="clock-btn stop" onclick="clockStop()" title="Stop clock">■ STOP</button>
-      </div>
+      <div style="font-size:.55rem;color:var(--gray);text-align:center;letter-spacing:.5px;margin-top:1px">GAME CLOCK</div>
+    </div>
+    <!-- Penalty clock -->
+    <div class="pen-clock-wrap" id="pen-clock-wrap" title="Penalty countdown">
+      <div class="pen-clock-time" id="pen-clock-display">—</div>
+      <div style="font-size:.55rem;color:#e84a4a;text-align:center;letter-spacing:.5px;margin-top:1px">PENALTY</div>
     </div>
     <!-- Scoreboard -->
     <div class="scoreboard">
@@ -400,11 +451,17 @@
         <span class="mic-icon" id="mic-icon">🎙</span>
         <span id="mic-label">TAP TO SPEAK</span>
       </button>
-      <div class="time-row">
-        <label>Clock time:</label>
-        <input type="text" class="time-input" id="manual-time" placeholder="8:30" maxlength="5" autocomplete="off" inputmode="decimal">
-        <span class="time-hint">mm:ss — optional, stamps goals &amp; penalties</span>
+      <!-- Penalty countdown bar (replaces clock time input) -->
+      <div class="pen-bar" id="pen-bar">
+        <div class="pen-bar-icon">🟨</div>
+        <div class="pen-bar-info">
+          <div class="pen-bar-label" id="pen-bar-label">No active penalty</div>
+          <div class="pen-bar-time" id="pen-bar-time">—</div>
+        </div>
+        <button class="pen-bar-clear" onclick="clearPenaltyClock()" title="Clear penalty clock">✕</button>
       </div>
+      <!-- Hidden field still used internally for clock sync -->
+      <input type="hidden" id="manual-time" value="">
       <div class="voice-result" id="voice-result">
         <div style="color:#4a5a40">Tap mic and say a jersey number + stat…</div>
       </div>
@@ -1009,7 +1066,9 @@ function startGame(){
   // Initialize game clock
   clockStop();
   clockSeconds = game.periodMins * 60;
+  penActive=false; penSeconds=0; penLabel='';
   updateClockDisplay();
+  updatePenDisplay();
   show('game-screen');
   initSpeech();
   setTimeout(updateLandscapeLayout,100);
@@ -1048,6 +1107,8 @@ function updatePeriodDisplay(){
   clockStop();
   clockSeconds = (game.periodMins||12) * 60;
   if(typeof updateClockDisplay==='function') updateClockDisplay();
+  // Reset penalty clock on period change
+  clearPenaltyClock();
 }
 
 // ═══════════════════════════════════════════════════
@@ -1057,32 +1118,112 @@ let clockSeconds = 0;
 let clockInterval = null;
 let clockRunning = false;
 
+// ── Penalty clock ──
+let penSeconds = 0;       // remaining penalty seconds
+let penActive = false;    // is a penalty countdown active?
+let penLabel = '';        // e.g. "#22 Slashing"
+let penFlashCount = 0;    // flash counter at expiry
+
 function clockFmt(s){
-  const m=Math.floor(s/60), sec=s%60;
+  const m=Math.floor(Math.max(0,s)/60), sec=Math.max(0,s)%60;
   return m+':'+String(sec).padStart(2,'0');
 }
+
 function updateClockDisplay(){
   const t=clockFmt(clockSeconds);
-  // Update header mini-clock
+  // Header game clock
   const el=document.getElementById('game-clock-display');
   if(el){el.textContent=t;el.className='game-clock-time '+(clockRunning?'running':'stopped');}
-  // Update big clock bar above mic
+  // Big clock bar above mic
   const bar=document.getElementById('clock-bar-display');
   if(bar){bar.textContent=t;bar.className='clock-bar-time '+(clockRunning?'running':'stopped');}
-  // Sync start/stop button states
-  const startBtn=document.getElementById('clock-start-btn');
-  const stopBtn=document.getElementById('clock-stop-btn');
-  if(startBtn) startBtn.style.opacity=clockRunning?'0.4':'1';
-  if(stopBtn) stopBtn.style.opacity=clockRunning?'1':'0.4';
-  // Auto-sync the manual-time field with clock when running
-  if(clockRunning) document.getElementById('manual-time').value=t;
+  // Start/stop button opacity
+  const sb=document.getElementById('clock-start-btn');
+  const st=document.getElementById('clock-stop-btn');
+  if(sb) sb.style.opacity=clockRunning?'0.4':'1';
+  if(st) st.style.opacity=clockRunning?'1':'0.4';
+  // Keep hidden manual-time in sync (used for event stamping)
+  document.getElementById('manual-time').value=t;
 }
+
+function updatePenDisplay(){
+  const wrap=document.getElementById('pen-clock-wrap');
+  const disp=document.getElementById('pen-clock-display');
+  const barTime=document.getElementById('pen-bar-time');
+  const barLabel=document.getElementById('pen-bar-label');
+  if(!wrap||!disp) return;
+  if(!penActive){
+    disp.textContent='—';
+    wrap.className='pen-clock-wrap inactive';
+    if(barTime) barTime.textContent='—';
+    if(barTime) barTime.classList.remove('expired');
+    if(barLabel) barLabel.textContent='No active penalty';
+    return;
+  }
+  const t=clockFmt(penSeconds);
+  disp.textContent=t;
+  wrap.className='pen-clock-wrap active';
+  if(barTime){barTime.textContent=t; barTime.classList.toggle('expired', penSeconds===0);}
+  if(barLabel) barLabel.textContent=penLabel||'Penalty countdown';
+}
+
+function penTickDown(){
+  if(!penActive||!clockRunning) return;
+  if(penSeconds>0){
+    penSeconds--;
+    updatePenDisplay();
+    if(penSeconds===0) penExpired();
+  }
+}
+
+function penExpired(){
+  // Flash the penalty display 5 times then leave at 0:00
+  penFlashCount=0;
+  const disp=document.getElementById('pen-clock-display');
+  const barTime=document.getElementById('pen-bar-time');
+  function doFlash(){
+    if(penFlashCount>=10){// 5 full on/off cycles = 10 half-cycles
+      if(disp) disp.style.cssText='';
+      if(barTime) barTime.style.cssText='';
+      penActive=false;
+      updatePenDisplay();
+      return;
+    }
+    const on=penFlashCount%2===0;
+    const flashStyle=on?'color:#fff;background:#e84a4a;border-radius:4px;padding:0 4px;':'color:#e84a4a;background:transparent;';
+    if(disp) disp.style.cssText=flashStyle;
+    if(barTime) barTime.style.cssText=flashStyle;
+    penFlashCount++;
+    setTimeout(doFlash, 300);
+  }
+  doFlash();
+}
+
+function setPenaltyClock(seconds, label){
+  penSeconds=seconds;
+  penLabel=label;
+  penActive=true;
+  updatePenDisplay();
+}
+
+function clearPenaltyClock(){
+  penActive=false;
+  penSeconds=0;
+  penLabel='';
+  updatePenDisplay();
+}
+
 function clockStart(){
   if(clockRunning) return;
   clockRunning=true;
   clockInterval=setInterval(()=>{
-    if(clockSeconds>0){clockSeconds--;updateClockDisplay();}
-    else{clockStop();}
+    if(clockSeconds>0){
+      clockSeconds--;
+      updateClockDisplay();
+      penTickDown();
+    } else {
+      clockStop();
+    }
   },1000);
   updateClockDisplay();
 }
@@ -1097,7 +1238,6 @@ function clockSync(timeStr){
   const parts=t.split(':');
   clockSeconds=parseInt(parts[0])*60+parseInt(parts[1]);
   updateClockDisplay();
-  document.getElementById('manual-time').value=t;
   return true;
 }
 function clockGetCurrentTime(){
@@ -1457,9 +1597,24 @@ function logPenaltyDirect(num,penType,dur,clockTime){
   getPlayer(num).penalties=(getPlayer(num).penalties||0)+1;
   const pen={id:++eventId,period:game.period,clockTime:clockTime||null,jersey:num,pen:penType,dur};
   game.penalties.push(pen);
-  // Store penDur on event so renderLog can show it
   const ev={id:eventId,period:game.period,clockTime:clockTime||null,jersey:num,stat:'penalties',label:'Penalty: '+penType,type:'penalty',penDur:dur};
   game.events.unshift(ev);renderLog();renderPenalties();
+  // ── Auto-start penalty countdown clock ──
+  const durSecs=parsePenDurToSeconds(dur);
+  if(durSecs>0){
+    const name=rosterName(num);
+    setPenaltyClock(durSecs, '#'+num+(name?' '+name:'')+' — '+penType+' ('+dur+')');
+  }
+}
+
+// Convert penalty duration string to seconds
+function parsePenDurToSeconds(dur){
+  if(!dur||dur==='—') return 0;
+  if(dur==='Expulsion') return 0; // expulsion — no timed countdown
+  // Format: "1:00", "2:00", "0:30", "3:00"
+  const m=dur.match(/^(\d+):(\d{2})$/);
+  if(m) return parseInt(m[1])*60+parseInt(m[2]);
+  return 0;
 }
 function logTimeout(side,clockTime){
   const ct=clockTime||getActiveTime();
