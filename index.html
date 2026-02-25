@@ -154,10 +154,14 @@
     .q-btn .q-icon{font-size:.9rem;}
     /* Penalty strip tighter */
     .pen-strip-time{font-size:1.1rem;}
-    /* Log shorter in portrait */
-    .log-feed{max-height:140px;}
+    /* Log expands to fill remaining space in portrait */
+    .log-feed{max-height:220px;}
     /* Voice result smaller */
     .voice-result{font-size:.82rem;min-height:38px;}
+    /* Hide landscape-only end game button in portrait */
+    .end-game-landscape{display:none !important;}
+    /* Show portrait end game button */
+    .end-game-portrait{display:block !important;}
   }
 
   /* Scoreboard */
@@ -195,13 +199,15 @@
     #tab-stats,#tab-pen,#tab-info{width:35%;overflow-y:auto;height:calc(100vh - 68px);box-sizing:border-box;}
     /* Right panel: scrolling event log — 35% */
     #landscape-log-panel{display:flex !important;flex-direction:column;width:35%;height:calc(100vh - 68px);overflow-y:auto;border-left:1px solid #2e3828;box-sizing:border-box;padding:10px 12px;}
-    /* Penalty bar in landscape - more compact */
-    .pen-bar{padding:5px 10px;}
-    .pen-bar-time{font-size:1.4rem;}
+    /* Hide the portrait end game button (inside tab-live) */
+    .end-game-portrait{display:none !important;}
+    /* Show the landscape end game button at very bottom, full width */
+    .end-game-landscape{display:block !important;width:100%;order:20;flex-shrink:0;}
+    /* bottom-nav sits just above end-game-landscape */
+    .bottom-nav{width:100%;order:10;}
     /* Period nav buttons bigger on iPad */
     .period-nav-btn{width:36px;height:36px;font-size:1.1rem;}
     .period-num{font-size:2rem;}
-    .bottom-nav{width:100%;order:10;}
     .log-feed{max-height:none;flex:1;}
     /* Bigger quarter button on iPad */
     .quarter-btn{font-size:1rem;padding:6px 14px !important;}
@@ -215,6 +221,8 @@
     /* Voice area tighter in landscape */
     .voice-area{padding:10px 12px;gap:8px;}
     .mic-btn{padding:12px 16px;}
+    /* Hide log section inside tab-live in landscape (it's shown in right panel) */
+    #tab-live .log-section{display:none;}
   }
   @media (min-width:768px){
     .setup-card{max-width:540px;}
@@ -543,11 +551,19 @@
       <div class="log-feed" id="log-feed"></div>
     </div>
 
-    <div style="padding:0 14px 14px">
+    <!-- End Game button: visible in portrait inside tab-live; hidden in landscape (landscape version is below) -->
+    <div class="end-game-portrait" style="padding:0 14px 14px">
       <button class="btn danger" onclick="openEndGame()" style="font-size:1.1rem;letter-spacing:2px">
         🏁 END GAME
       </button>
     </div>
+  </div>
+
+  <!-- End Game button: landscape only, sits at very bottom of game-screen below the nav -->
+  <div class="end-game-landscape" style="display:none;padding:8px 14px;background:var(--panel);border-top:1px solid #2e3828;width:100%;order:20;">
+    <button class="btn danger" onclick="openEndGame()" style="font-size:1.1rem;letter-spacing:2px">
+      🏁 END GAME
+    </button>
   </div>
 
   <!-- STATS TAB -->
@@ -747,7 +763,7 @@
     <button class="nav-tab" onclick="showTab('info',this)"><span class="nav-icon">ℹ️</span>INFO</button>
   </div>
 
-  <!-- LANDSCAPE EVENT LOG PANEL (right side, iPad landscape only) -->
+  <!-- LANDSCAPE EVENT LOG PANEL (right side, iPad/landscape only) -->
   <div id="landscape-log-panel" style="display:none">
     <div class="section-title" style="margin-bottom:8px">Event Log <span id="landscape-log-count" class="badge">0</span></div>
     <div class="log-feed" id="landscape-log-feed" style="max-height:none;flex:1;overflow-y:auto"></div>
@@ -2711,6 +2727,13 @@ function updateLandscapeLayout(){
     const liveTab = document.getElementById('tab-live');
     if(liveTab) liveTab.style.display = 'flex';
   }
+  // Toggle End Game button visibility: portrait version inside tab-live, landscape at bottom
+  document.querySelectorAll('.end-game-portrait').forEach(el=>{
+    el.style.display = isLandscape ? 'none' : 'block';
+  });
+  document.querySelectorAll('.end-game-landscape').forEach(el=>{
+    el.style.display = isLandscape ? 'block' : 'none';
+  });
   // Force re-render of pen strip after orientation change
   renderPenStrip();
 }
