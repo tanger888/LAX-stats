@@ -97,13 +97,68 @@
   .game-clock-time.stopped{color:var(--accent);}
   .hdr-sublabel{font-size:.5rem;color:var(--gray);text-align:center;letter-spacing:.5px;margin-top:1px;}
 
-  /* Penalty countdown clock */
-  .pen-clock-wrap{display:flex;flex-direction:column;align-items:center;background:#1a0808;border:1px solid #4a1a1a;border-radius:8px;padding:4px 8px;flex-shrink:0;min-width:60px;}
+  /* Penalty countdown clock (header — shows count badge) */
+  .pen-clock-wrap{display:flex;flex-direction:column;align-items:center;background:#1a0808;border:1px solid #4a1a1a;border-radius:8px;padding:4px 8px;flex-shrink:0;min-width:52px;cursor:pointer;}
   .pen-clock-wrap.active{border-color:#e84a4a;box-shadow:0 0 6px rgba(232,74,74,.3);}
   .pen-clock-wrap.inactive{opacity:.4;}
   .pen-clock-time{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;color:#e84a4a;letter-spacing:2px;line-height:1;}
   .pen-clock-time.flash{animation:penFlash .3s ease-in-out;}
   @keyframes penFlash{0%,100%{color:#e84a4a;background:transparent;}50%{color:#fff;background:#e84a4a;border-radius:4px;}}
+
+  /* ── MULTI-PENALTY TRACKER STRIP ── */
+  .pen-strip{display:flex;flex-direction:column;gap:5px;margin:0 14px 8px;}
+  .pen-strip-item{display:flex;align-items:center;gap:8px;background:#1a0808;border:1px solid #3a1a1a;border-radius:8px;padding:6px 10px;position:relative;overflow:hidden;}
+  .pen-strip-item.expired{opacity:.55;border-color:#333;}
+  .pen-strip-progress{position:absolute;left:0;top:0;bottom:0;background:rgba(232,74,74,.15);transition:width 1s linear;pointer-events:none;}
+  .pen-strip-num{font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--gold);min-width:28px;flex-shrink:0;z-index:1;}
+  .pen-strip-info{flex:1;min-width:0;z-index:1;}
+  .pen-strip-name{font-size:.72rem;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pen-strip-type{font-size:.65rem;color:#c06060;}
+  .pen-strip-time{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:#e84a4a;letter-spacing:2px;flex-shrink:0;min-width:44px;text-align:right;z-index:1;}
+  .pen-strip-time.expired{color:#555;}
+  .pen-strip-del{background:none;border:none;color:#603030;font-size:.85rem;cursor:pointer;padding:2px 4px;flex-shrink:0;z-index:1;}
+  .pen-strip-del:hover{color:#e84a4a;}
+
+  /* ── TAPPABLE GAME CLOCK ── */
+  .game-clock-wrap{cursor:pointer;}
+  .game-clock-wrap:hover .game-clock-time{text-decoration:underline dotted rgba(232,200,74,.5);}
+  #clock-edit-input{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--gold);background:#0a100a;border:2px solid var(--gold);border-radius:6px;width:72px;text-align:center;letter-spacing:2px;padding:2px 4px;outline:none;}
+  /* Larger version inside the body clock bar */
+  .clock-bar #clock-edit-input{font-size:2rem;width:100px;padding:4px 6px;}
+
+  /* ── PORTRAIT / PHONE LAYOUT ── */
+  @media (orientation:portrait) and (max-width:599px){
+    /* Compact header — hide logo on very small screens */
+    .game-header{padding:5px 6px;gap:5px;}
+    .game-header img{display:none;}
+    .game-header .team-name{font-size:.85rem;}
+    .game-header .vs{font-size:.6rem;}
+    /* Smaller period nav */
+    .period-nav-btn{width:24px;height:24px;font-size:.8rem;}
+    .period-num{font-size:1.3rem;}
+    .period-lbl{font-size:.45rem;}
+    /* Smaller header clock */
+    .game-clock-time{font-size:1.3rem;}
+    .pen-clock-time{font-size:1.3rem;}
+    /* Smaller scoreboard */
+    .score-num{font-size:1.6rem;min-width:20px;}
+    /* Clock bar — stack vertically in portrait */
+    .clock-bar{flex-wrap:wrap;gap:6px;padding:6px 10px;}
+    .clock-bar-time{font-size:1.8rem;order:-1;width:100%;text-align:center;}
+    .clock-bar-btn{flex:1;font-size:.95rem;padding:9px 10px;}
+    /* Mic button slightly smaller */
+    .mic-btn{padding:12px;font-size:1.2rem;}
+    /* Quick grid — 4 columns in portrait to fit more on screen */
+    .quick-grid{grid-template-columns:repeat(4,1fr);gap:4px;}
+    .q-btn{padding:7px 2px;font-size:.62rem;}
+    .q-btn .q-icon{font-size:.9rem;}
+    /* Penalty strip tighter */
+    .pen-strip-time{font-size:1.1rem;}
+    /* Log shorter in portrait */
+    .log-feed{max-height:140px;}
+    /* Voice result smaller */
+    .voice-result{font-size:.82rem;min-height:38px;}
+  }
 
   /* Scoreboard */
   .scoreboard{display:flex;align-items:center;gap:6px;background:#0e130e;border:1px solid #2e3828;border-radius:8px;padding:5px 8px;flex-shrink:0;}
@@ -130,7 +185,7 @@
   .clock-bar-btn.stop{background:#4a1a1a;color:var(--accent);border:2px solid #6a2a2a;}
   .clock-bar-btn:active{opacity:.7;}
 
-  /* ── LANDSCAPE / IPAD ── */
+  /* ── LANDSCAPE / IPAD (600px+) ── */
   @media (orientation:landscape) and (min-width:600px){
     #game-screen{flex-direction:row;flex-wrap:wrap;}
     .game-header{width:100%;flex-shrink:0;}
@@ -413,15 +468,15 @@
       </div>
       <button class="period-nav-btn" onclick="nextPeriod()" title="Next period">▶</button>
     </div>
-    <!-- Game clock (display only in header) -->
-    <div class="game-clock-wrap">
+    <!-- Game clock (tap to manually set time) -->
+    <div class="game-clock-wrap" onclick="openClockEdit()" title="Tap to set clock time">
       <div class="game-clock-time stopped" id="game-clock-display">12:00</div>
-      <div style="font-size:.55rem;color:var(--gray);text-align:center;letter-spacing:.5px;margin-top:1px">GAME CLOCK</div>
+      <div style="font-size:.45rem;color:var(--gray);text-align:center;letter-spacing:.5px;margin-top:1px">TAP TO SET</div>
     </div>
-    <!-- Penalty clock -->
-    <div class="pen-clock-wrap" id="pen-clock-wrap" title="Penalty countdown">
+    <!-- Penalty count badge (tapping goes to FOULS tab) -->
+    <div class="pen-clock-wrap" id="pen-clock-wrap" title="Active penalties" onclick="showTab('pen',document.querySelector('.nav-tab:nth-child(3)'))">
       <div class="pen-clock-time" id="pen-clock-display">—</div>
-      <div style="font-size:.55rem;color:#e84a4a;text-align:center;letter-spacing:.5px;margin-top:1px">PENALTY</div>
+      <div style="font-size:.45rem;color:#e84a4a;text-align:center;letter-spacing:.5px;margin-top:1px">PENALTY</div>
     </div>
     <!-- Scoreboard -->
     <div class="scoreboard">
@@ -445,22 +500,18 @@
       <!-- Clock control bar above mic -->
       <div class="clock-bar">
         <button class="clock-bar-btn go" onclick="clockStart()" id="clock-start-btn">▶ START</button>
-        <div class="clock-bar-time" id="clock-bar-display">12:00</div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;cursor:pointer;" onclick="openClockEditBar()" title="Tap to set clock time">
+          <div class="clock-bar-time" id="clock-bar-display">12:00</div>
+          <div style="font-size:.5rem;color:#4a6040;letter-spacing:.8px;margin-top:-2px;">TAP TO SET</div>
+        </div>
         <button class="clock-bar-btn stop" onclick="clockStop()" id="clock-stop-btn">■ STOP</button>
       </div>
       <button class="mic-btn" id="mic-btn" onclick="toggleListening()">
         <span class="mic-icon" id="mic-icon">🎙</span>
         <span id="mic-label">TAP TO SPEAK</span>
       </button>
-      <!-- Penalty countdown bar (replaces clock time input) -->
-      <div class="pen-bar" id="pen-bar">
-        <div class="pen-bar-icon">🟨</div>
-        <div class="pen-bar-info">
-          <div class="pen-bar-label" id="pen-bar-label">No active penalty</div>
-          <div class="pen-bar-time" id="pen-bar-time">—</div>
-        </div>
-        <button class="pen-bar-clear" onclick="clearPenaltyClock()" title="Clear penalty clock">✕</button>
-      </div>
+      <!-- Multi-penalty countdown strip -->
+      <div class="pen-strip" id="pen-strip"></div>
       <!-- Hidden field still used internally for clock sync -->
       <input type="hidden" id="manual-time" value="">
       <div class="voice-result" id="voice-result">
@@ -1073,9 +1124,9 @@ function startGame(){
   // Initialize game clock
   clockStop();
   clockSeconds = game.periodMins * 60;
-  penActive=false; penSeconds=0; penLabel='';
+  activePenalties=[];
   updateClockDisplay();
-  updatePenDisplay();
+  renderPenStrip();
   show('game-screen');
   initSpeech();
   setTimeout(updateLandscapeLayout,100);
@@ -1125,11 +1176,10 @@ let clockSeconds = 0;
 let clockInterval = null;
 let clockRunning = false;
 
-// ── Penalty clock ──
-let penSeconds = 0;       // remaining penalty seconds
-let penActive = false;    // is a penalty countdown active?
-let penLabel = '';        // e.g. "#22 Slashing"
-let penFlashCount = 0;    // flash counter at expiry
+// ── Multi-Penalty clock system ──
+// Each active penalty: {id, jerseyNum, name, penType, dur, totalSecs, remainingSecs, expired, flashCount}
+let activePenalties = [];
+let penIdCounter = 0;
 
 function clockFmt(s){
   const m=Math.floor(Math.max(0,s)/60), sec=Math.max(0,s)%60;
@@ -1153,72 +1203,160 @@ function updateClockDisplay(){
   document.getElementById('manual-time').value=t;
 }
 
-function updatePenDisplay(){
+// ── Tappable clock edit (shared logic) ──
+function _doClockEdit(displayEl, wrapEl){
+  if(!displayEl||!wrapEl) return;
+  const wasRunning=clockRunning;
+  if(wasRunning) clockStop();
+  const cur=clockFmt(clockSeconds);
+  const input=document.createElement('input');
+  input.id='clock-edit-input';
+  input.type='text';
+  input.value=cur;
+  input.maxLength=5;
+  input.placeholder='m:ss';
+  // Hide all children except the input we're inserting
+  const children=[...wrapEl.children];
+  children.forEach(c=>c.style.display='none');
+  wrapEl.insertBefore(input, wrapEl.firstChild);
+  input.focus(); input.select();
+  function commit(){
+    const t=parseClockTime(input.value);
+    if(t){const parts=t.split(':');clockSeconds=parseInt(parts[0])*60+parseInt(parts[1]);}
+    input.remove();
+    children.forEach(c=>c.style.display='');
+    updateClockDisplay();
+    if(wasRunning) clockStart();
+  }
+  input.addEventListener('keydown',e=>{
+    if(e.key==='Enter') commit();
+    if(e.key==='Escape'){input.remove();children.forEach(c=>c.style.display='');if(wasRunning)clockStart();}
+  });
+  input.addEventListener('blur',()=>setTimeout(commit,150));
+}
+// Header game clock (small)
+function openClockEdit(){
+  _doClockEdit(
+    document.getElementById('game-clock-display'),
+    document.getElementById('game-clock-display').parentElement
+  );
+}
+// Body clock bar (large) — the clickable wrapper div
+function openClockEditBar(){
+  const barDisplay=document.getElementById('clock-bar-display');
+  if(!barDisplay) return;
+  // The clickable wrapper is barDisplay's parent (the flex column div)
+  _doClockEdit(barDisplay, barDisplay.parentElement);
+}
+
+// ── Multi-penalty display strip ──
+function renderPenStrip(){
+  const strip=document.getElementById('pen-strip');
+  if(!strip)return;
+  // Remove expired penalties older than 5s after expiry flash
+  const visible=activePenalties.filter(p=>!p.removeMe);
+  if(!visible.length){strip.innerHTML='';updatePenHeaderBadge();return;}
+  strip.innerHTML=visible.map(p=>{
+    const pct=p.totalSecs>0?Math.max(0,p.remainingSecs/p.totalSecs*100):0;
+    const expClass=p.expired?'expired':'';
+    const timeDisplay=p.expired?'0:00':clockFmt(p.remainingSecs);
+    return`<div class="pen-strip-item ${expClass}" id="pstrip-${p.id}">
+      <div class="pen-strip-progress" style="width:${pct}%"></div>
+      <div class="pen-strip-num">#${p.jerseyNum}</div>
+      <div class="pen-strip-info">
+        <div class="pen-strip-name">${p.name||p.jerseyNum}</div>
+        <div class="pen-strip-type">${p.penType} · ${p.dur}</div>
+      </div>
+      <div class="pen-strip-time ${expClass}" id="pstrip-time-${p.id}">${timeDisplay}</div>
+      <button class="pen-strip-del" onclick="removePenaltyTimer(${p.id})" title="Clear">✕</button>
+    </div>`;
+  }).join('');
+  updatePenHeaderBadge();
+}
+
+function updatePenHeaderBadge(){
+  const active=activePenalties.filter(p=>!p.expired&&!p.removeMe);
   const wrap=document.getElementById('pen-clock-wrap');
   const disp=document.getElementById('pen-clock-display');
-  const barTime=document.getElementById('pen-bar-time');
-  const barLabel=document.getElementById('pen-bar-label');
-  if(!wrap||!disp) return;
-  if(!penActive){
+  if(!wrap||!disp)return;
+  if(!active.length){
     disp.textContent='—';
     wrap.className='pen-clock-wrap inactive';
-    if(barTime) barTime.textContent='—';
-    if(barTime) barTime.classList.remove('expired');
-    if(barLabel) barLabel.textContent='No active penalty';
-    return;
-  }
-  const t=clockFmt(penSeconds);
-  disp.textContent=t;
-  wrap.className='pen-clock-wrap active';
-  if(barTime){barTime.textContent=t; barTime.classList.toggle('expired', penSeconds===0);}
-  if(barLabel) barLabel.textContent=penLabel||'Penalty countdown';
-}
-
-function penTickDown(){
-  if(!penActive||!clockRunning) return;
-  if(penSeconds>0){
-    penSeconds--;
-    updatePenDisplay();
-    if(penSeconds===0) penExpired();
+  } else {
+    // Show count if multiple, or time if single
+    if(active.length===1){
+      disp.textContent=clockFmt(active[0].remainingSecs);
+    } else {
+      disp.textContent=active.length+'🟨';
+    }
+    wrap.className='pen-clock-wrap active';
   }
 }
 
-function penExpired(){
-  // Flash the penalty display 5 times then leave at 0:00
-  penFlashCount=0;
-  const disp=document.getElementById('pen-clock-display');
-  const barTime=document.getElementById('pen-bar-time');
+function allPenTickDown(){
+  if(!clockRunning)return;
+  let changed=false;
+  activePenalties.forEach(p=>{
+    if(p.expired||p.removeMe)return;
+    if(p.remainingSecs>0){
+      p.remainingSecs--;
+      changed=true;
+      if(p.remainingSecs===0){
+        p.expired=true;
+        startPenExpireFlash(p.id);
+      }
+    }
+  });
+  if(changed)renderPenStrip();
+}
+
+function startPenExpireFlash(pid){
+  const p=activePenalties.find(x=>x.id===pid);
+  if(!p)return;
+  let flashCount=0;
   function doFlash(){
-    if(penFlashCount>=10){// 5 full on/off cycles = 10 half-cycles
-      if(disp) disp.style.cssText='';
-      if(barTime) barTime.style.cssText='';
-      penActive=false;
-      updatePenDisplay();
+    const el=document.getElementById('pstrip-time-'+pid);
+    if(!el){p.removeMe=true;renderPenStrip();return;}
+    if(flashCount>=10){
+      // Schedule removal from strip after a pause
+      setTimeout(()=>{p.removeMe=true;renderPenStrip();},4000);
       return;
     }
-    const on=penFlashCount%2===0;
-    const flashStyle=on?'color:#fff;background:#e84a4a;border-radius:4px;padding:0 4px;':'color:#e84a4a;background:transparent;';
-    if(disp) disp.style.cssText=flashStyle;
-    if(barTime) barTime.style.cssText=flashStyle;
-    penFlashCount++;
-    setTimeout(doFlash, 300);
+    const on=flashCount%2===0;
+    el.style.cssText=on?'color:#fff;background:#e84a4a;border-radius:3px;padding:0 3px;':'color:#555;background:transparent;';
+    flashCount++;
+    setTimeout(doFlash,300);
   }
   doFlash();
 }
 
-function setPenaltyClock(seconds, label){
-  penSeconds=seconds;
-  penLabel=label;
-  penActive=true;
-  updatePenDisplay();
+function addPenaltyTimer(jerseyNum, penType, dur, durSecs){
+  if(durSecs<=0)return; // Expulsions etc. — no countdown
+  const name=rosterName(jerseyNum);
+  const pen={
+    id:++penIdCounter,
+    jerseyNum, name, penType, dur,
+    totalSecs:durSecs, remainingSecs:durSecs,
+    expired:false, removeMe:false
+  };
+  activePenalties.push(pen);
+  renderPenStrip();
 }
 
-function clearPenaltyClock(){
-  penActive=false;
-  penSeconds=0;
-  penLabel='';
-  updatePenDisplay();
+function removePenaltyTimer(pid){
+  activePenalties=activePenalties.filter(p=>p.id!==pid);
+  renderPenStrip();
 }
+
+// Legacy stubs kept for backward compat (called from updatePeriodDisplay)
+function clearPenaltyClock(){
+  // On period change, clear all active penalty timers
+  activePenalties=[];
+  renderPenStrip();
+}
+// Kept for any external calls
+function setPenaltyClock(){}
+function updatePenDisplay(){}
 
 function clockStart(){
   if(clockRunning) return;
@@ -1227,7 +1365,7 @@ function clockStart(){
     if(clockSeconds>0){
       clockSeconds--;
       updateClockDisplay();
-      penTickDown();
+      allPenTickDown();
     } else {
       clockStop();
     }
@@ -1521,7 +1659,7 @@ function processVoice(rawText){
     return;
   }
 
-  if(/\btimeout\b/.test(text)){
+  if(/\btimeout\b|\btime\s+out\b/.test(text)){
     const side=/opp|opponent|their/.test(text)?'opp':'home';
     logTimeout(side,clockTime);
     resultEl.innerHTML+=`<div class="parsed">✅ ${side==='home'?game.team:game.opp} Timeout${clockTime?' @ '+clockTime:''}</div>`;
@@ -1545,18 +1683,62 @@ function processVoice(rawText){
     return;
   }
 
-  // Step 4: find jersey number (digits only — word conversion already done above)
-  const numMatch=text.match(/\b(\d{1,2})\b/);
-  if(!numMatch){resultEl.innerHTML+='<div class="parsed" style="color:var(--accent)">⚠ No jersey number heard. Try again.</div>';return;}
-  const num=resolveJerseyNum(numMatch[1]);
+  // Step 4: resolve player — support jersey number, name, or both (name wins on conflict)
+  // Build a set of stat/penalty keywords to strip before name searching
+  const STAT_WORDS = ['goal','assist','shot','save','ground ball','turnover','caused turnover',
+    'face off','faceoff','face-off','clear','penalty','slash','push','hold','cross check',
+    'crease','expulsion','unsportsmanlike','roughness','interference','warding','offsides',
+    'conduct','late hit','illegal','save','allowed','win','loss','timeout','time out',
+    'quarter','half','period','clock','start','stop','sync','next','opponent','game'];
+  // Strip stat keywords, digits, punctuation to isolate potential name tokens
+  let textForName = text;
+  STAT_WORDS.forEach(w => { textForName = textForName.replace(new RegExp('\\b'+w+'\\b','gi'),' '); });
+  textForName = textForName.replace(/\bat\b|\btime\b/gi,' ').replace(/\d+/g,' ').replace(/[^a-z\s]/gi,' ').replace(/\s+/g,' ').trim();
+
+  // Try to match roster player by name tokens in the text
+  let nameMatchNum = null;
+  if(textForName.length >= 2){
+    const tokens = textForName.toLowerCase().split(/\s+/).filter(t=>t.length>=2);
+    // Score each roster player by how many name tokens match
+    let bestScore = 0;
+    roster.forEach(p => {
+      const last  = p.last.toLowerCase();
+      const first = p.first.toLowerCase();
+      let score = 0;
+      tokens.forEach(tok => {
+        if(last.startsWith(tok)||last===tok) score += 2;
+        else if(first.startsWith(tok)||first===tok) score += 1;
+      });
+      if(score > bestScore){ bestScore = score; nameMatchNum = p.num; }
+    });
+    if(bestScore === 0) nameMatchNum = null; // no meaningful match
+  }
+
+  // Also look for a jersey number in the text
+  const numMatch = text.match(/\b(\d{1,2})\b/);
+  const jerseyNum = numMatch ? resolveJerseyNum(numMatch[1]) : null;
+
+  // Resolution: name wins on conflict, jersey fallback if no name found
+  let num = null;
+  if(nameMatchNum && jerseyNum && nameMatchNum !== jerseyNum){
+    // Conflict — name takes priority
+    num = nameMatchNum;
+  } else if(nameMatchNum){
+    num = nameMatchNum;
+  } else if(jerseyNum){
+    num = jerseyNum;
+  } else {
+    resultEl.innerHTML+='<div class="parsed" style="color:var(--accent)">⚠ No player identified. Say a jersey number or name.</div>';
+    return;
+  }
 
   // Step 5: check for penalty — must start with "penalty" keyword
-  // Syntax: penalty [#] [penType] [optional duration] [optional at/time clock]
   const isPenalty=/\bpenalty\b/.test(text);
   const penKey=isPenalty ? Object.keys(PENALTY_TYPES).sort((a,b)=>b.length-a.length).find(k=>text.includes(k)) : null;
   if(isPenalty && penKey){
-    const afterNum=text.slice(numMatch.index+numMatch[0].length).trim();
-    const{dur}=extractPenDuration(afterNum);
+    // Strip number and name tokens to extract duration
+    const afterPlayer = text.replace(/\b\d{1,2}\b/,'').replace(new RegExp(textForName,'i'),'').trim();
+    const{dur}=extractPenDuration(afterPlayer);
     logPenaltyDirect(num,PENALTY_TYPES[penKey],dur,clockTime);
     resultEl.innerHTML+=`<div class="parsed">🟨 #${num} ${rosterName(num)} — ${PENALTY_TYPES[penKey]} (${dur})${clockTime?' @ '+clockTime:''}</div>`;
     if(clockTime)document.getElementById('manual-time').value='';
@@ -1611,12 +1793,9 @@ function logPenaltyDirect(num,penType,dur,clockTime){
   game.penalties.push(pen);
   const ev={id:eventId,period:game.period,clockTime:clockTime||null,jersey:num,stat:'penalties',label:'Penalty: '+penType,type:'penalty',penDur:dur};
   game.events.unshift(ev);renderLog();renderPenalties();
-  // ── Auto-start penalty countdown clock ──
+  // ── Auto-start penalty countdown timer (supports multiple simultaneous) ──
   const durSecs=parsePenDurToSeconds(dur);
-  if(durSecs>0){
-    const name=rosterName(num);
-    setPenaltyClock(durSecs, '#'+num+(name?' '+name:'')+' — '+penType+' ('+dur+')');
-  }
+  addPenaltyTimer(num, penType, dur, durSecs);
 }
 
 // Convert penalty duration string to seconds
@@ -2522,19 +2701,21 @@ function buildPrintHTML(){
 </body></html>`;
 }
 
-// ── Landscape panel visibility ──
+// ── Orientation & layout handling ──
 function updateLandscapeLayout(){
   const isLandscape = window.innerWidth > window.innerHeight && window.innerWidth >= 600;
   const panel = document.getElementById('landscape-log-panel');
   if(panel) panel.style.display = isLandscape ? 'flex' : 'none';
-  // In landscape, live tab always stays visible on left
+  // In landscape (iPad/large), live tab always stays visible on left
   if(isLandscape){
     const liveTab = document.getElementById('tab-live');
     if(liveTab) liveTab.style.display = 'flex';
   }
+  // Force re-render of pen strip after orientation change
+  renderPenStrip();
 }
 window.addEventListener('resize', updateLandscapeLayout);
-window.addEventListener('orientationchange', ()=>setTimeout(updateLandscapeLayout,200));
+window.addEventListener('orientationchange', ()=>setTimeout(updateLandscapeLayout,300));
 
 // Init: show setup screen
 show('setup-screen');
